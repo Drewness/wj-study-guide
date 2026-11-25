@@ -34,6 +34,68 @@ function isPdfData(url) {
   return url.pathname.endsWith(".pdf") && !url.searchParams.has("import");
 }
 
+test("GitHub Pages subpath serves images, PDF references, fallback images, and the PDF viewer", async ({
+  page,
+  baseURL,
+}) => {
+  const origin = new URL(baseURL).origin;
+  const localPaths = [];
+  const failures = [];
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (url.origin === origin) localPaths.push(url.pathname);
+  });
+  page.on("response", (response) => {
+    if (new URL(response.url()).origin === origin && response.status() >= 400)
+      failures.push(response.url());
+  });
+  await page.route("https://fonts.googleapis.com/**", (route) =>
+    route.fulfill({ contentType: "text/css", body: "" }),
+  );
+  await page.route("https://i.ytimg.com/**", (route) => route.abort());
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  expect(new URL(page.url()).pathname).toBe("/wj-study-guide/");
+  for (const selector of [
+    ".brand img",
+    '[data-book="guide"] img',
+    '[data-book="handbook"] img',
+  ]) {
+    await expect
+      .poll(() =>
+        page.locator(selector).evaluate((image) => image.naturalWidth),
+      )
+      .toBeGreaterThan(0);
+    expect(
+      await page
+        .locator(selector)
+        .evaluate((image) => new URL(image.src).pathname),
+    ).toMatch(/^\/wj-study-guide\//);
+  }
+  const guide = await page.locator("#open-original").getAttribute("href");
+  expect(guide).toMatch(/^\/wj-study-guide\/assets\/.+\.pdf$/);
+  const guideResponse = await page.request.head(guide);
+  expect(guideResponse.ok()).toBeTruthy();
+  expect(guideResponse.headers()["content-type"]).toContain("application/pdf");
+  await page.getByRole("button", { name: /Throw Guide/ }).click();
+  await expect(page.locator("#throw-detail img")).toHaveAttribute(
+    "src",
+    "/wj-study-guide/handbook-cover.webp",
+  );
+  await expect
+    .poll(() =>
+      page.locator("#throw-detail img").evaluate((image) => image.naturalWidth),
+    )
+    .toBeGreaterThan(0);
+  await page
+    .getByRole("button", { name: "View handbook", exact: true })
+    .click();
+  await expectPage(page, 33);
+  expect(
+    localPaths.every((path) => path.startsWith("/wj-study-guide/")),
+  ).toBeTruthy();
+  expect(failures).toEqual([]);
+});
+
 test("the transcription covers every source page and preserves structured source content", () => {
   const pages = studySections.flatMap((section) => section.pages);
   expect(pages.map((page) => page.number)).toEqual(
@@ -86,7 +148,7 @@ test("all study content is native HTML and works without loading a PDF", async (
     if (isPdfData(new URL(request.url()))) requests.push(request.url());
   });
   await page.route(isPdfData, (route) => route.abort());
-  await page.goto("/");
+  await page.goto("./");
   await expect(page.locator("#study-guide")).toBeVisible();
   await expect(page.locator(".reader")).toBeHidden();
   await expect(
@@ -163,7 +225,7 @@ test("all study content is native HTML and works without loading a PDF", async (
 test("study section navigation and reading position persist independently from the handbook", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: "Rokyu", exact: true }).click();
   await page.getByRole("button", { name: "Next section" }).click();
   await expect(page.locator("#study-section-title")).toHaveText("Gokyu");
@@ -202,7 +264,7 @@ test("study section navigation and reading position persist independently from t
 test("study tables stay within narrow-phone, tablet, and wide-screen layouts", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   for (const width of [320, 768, 1024, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page
@@ -266,7 +328,7 @@ test("the native throw catalog filters, handles empty results, and plays the mat
       body: "<!doctype html><title>Video frame test</title>",
     }),
   );
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: /Throw Guide/ }).click();
   await expect(page.locator("#throw-guide")).toBeVisible();
   await expect(page.locator(".reader")).toBeHidden();
@@ -337,7 +399,7 @@ test("the native throw catalog filters, handles empty results, and plays the mat
 test("rank practice preserves source tasks and independent local progress", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: /Throw Guide/ }).click();
   await page.getByRole("tab", { name: "Catalog", exact: true }).focus();
   await page.getByRole("tab", { name: "Catalog", exact: true }).press("End");
@@ -403,7 +465,7 @@ test("rank practice preserves source tasks and independent local progress", asyn
 test("throw catalog and practice fit narrow phones, tablets, and desktops", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await page.getByRole("button", { name: /Throw Guide/ }).click();
   for (const width of [320, 768, 1024]) {
     await page.setViewportSize({ width, height: 900 });
@@ -443,7 +505,7 @@ test("throw catalog and practice fit narrow phones, tablets, and desktops", asyn
 test("an idle PDF stays visible without resize-driven redraws", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await openHandbook(page);
   await expectPage(page, 33);
   expect(
@@ -510,7 +572,7 @@ test("the handbook still recovers from a failed PDF request", async ({
   page,
 }) => {
   await page.route(isPdfData, (route) => route.abort());
-  await page.goto("/");
+  await page.goto("./");
   await openHandbook(page);
   await expect(page.locator("#error")).toBeVisible({ timeout: 30000 });
   await expect(page.locator("#loading")).toBeHidden();

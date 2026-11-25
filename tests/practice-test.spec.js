@@ -62,7 +62,7 @@ async function seedQuestions(
         : undefined,
     },
   );
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("./", { waitUntil: "domcontentloaded" });
   await openTest(page);
 }
 
@@ -589,7 +589,7 @@ test("new tests default to mixed choices while keeping all cumulative questions 
   await page.route("https://fonts.googleapis.com/**", (route) =>
     route.fulfill({ contentType: "text/css", body: "" }),
   );
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("./", { waitUntil: "domcontentloaded" });
   await openTest(page);
   await expect(
     page.getByRole("combobox", { name: "Answer format" }),
@@ -987,7 +987,7 @@ test("Gokyu test covers both ranks, supports review, and retries only missed que
     if (url.pathname.endsWith(".pdf") && !url.searchParams.has("import"))
       pdfRequests.push(url.href);
   });
-  await page.goto("/");
+  await page.goto("./");
   await openTest(page);
   await expect(
     page.getByRole("button", { name: "Start test", exact: true }),
@@ -1067,7 +1067,7 @@ test("Gokyu test covers both ranks, supports review, and retries only missed que
 test("category filters and written answers survive workspace changes and reloads", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await openTest(page);
   await page
     .getByRole("combobox", { name: "Answer format" })
@@ -1140,7 +1140,7 @@ test("unanswered source prompts are reviewable but never scored as factual answe
       ),
     question.id,
   );
-  await page.goto("/");
+  await page.goto("./");
   await openTest(page);
   await expect(page.locator("#test-question-prompt")).toHaveText(
     question.prompt,
@@ -1189,7 +1189,7 @@ test("saved sessions cannot introduce questions from a rank above the selected t
       ),
     higherQuestion.id,
   );
-  await page.goto("/");
+  await page.goto("./");
   await openTest(page);
   await expect(page.locator("#test-setup")).toBeVisible();
   await expect(page.locator("#test-active")).toBeHidden();
@@ -1201,7 +1201,7 @@ test("saved sessions cannot introduce questions from a rank above the selected t
 test("practice-test setup, questions, and results fit phone, tablet, and desktop", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("./");
   await openTest(page);
   for (const width of [320, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });

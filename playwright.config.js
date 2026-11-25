@@ -3,7 +3,7 @@ import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
-  use: { baseURL: "http://localhost:4173", headless: true },
+  use: { baseURL: "http://localhost:4173/wj-study-guide/", headless: true },
   projects: [
     { name: "desktop", use: { viewport: { width: 1440, height: 1100 } } },
     {
@@ -18,7 +18,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run build && npm run preview -- --port 4173 --strictPort",
-    url: "http://localhost:4173",
+    url: "http://localhost:4173/wj-study-guide/",
     reuseExistingServer: false,
   },
 });

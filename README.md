@@ -97,4 +97,18 @@ npm run preview
 
 Browser tests cover all 20 extracted study pages, native reading with PDF requests blocked, source structure and values, all 68 throws and official-video metadata, search/filter/empty states, practice persistence and independent ranks, every cumulative practice-test rank boundary, category filters, recall scoring, retries, session recovery, responsive layouts, and the handbook viewer's zoom, bounds, bookmarks, error recovery, and idle/resize flicker regression. Embedded-player tests verify the selected video URL using a stubbed frame; they do not depend on third-party streaming availability. Deploy the generated `dist` folder to a static host. The PDFs and their extracted content are included in the build; do not deploy publicly unless their distribution is approved.
 
-Playwright builds the app and runs its own production preview on port 4173. It does not reuse the development server on port 5173, so live edits and Vite reloads do not interrupt a test attempt or the user's preview.
+Playwright builds the app and runs its own production preview at `http://localhost:4173/wj-study-guide/`. It does not reuse the development server on port 5173, so live edits and Vite reloads do not interrupt a test attempt or the user's preview. Browser tests exercise the production subpath, including local images, PDF references, and thumbnail fallback behavior.
+
+## GitHub Pages
+
+[.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) installs dependencies with `npm ci`, builds the app, uploads only `dist`, and deploys through GitHub Pages. It runs on pushes to `main` and can be started manually from the Actions tab. The build job has read-only repository access; only the deployment job receives Pages and identity-token write permissions. Actions are pinned to commit SHAs from Vite's official deployment guide. No custom secret or personal access token is required.
+
+1. In GitHub, open **Settings > Pages > Build and deployment**, then set **Source** to **GitHub Actions**, not **Deploy from a branch**.
+2. Commit and push the project changes, including the workflow, configuration, lockfile, app source, public assets, and approved PDFs. Do not commit generated dependencies or build output.
+3. Open **Actions > Deploy GitHub Pages** and wait for both jobs to finish. The deployment job and Pages settings display the published URL, normally `https://<username>.github.io/wj-study-guide/`.
+
+[vite.config.js](vite.config.js) uses `/wj-study-guide/` for production builds and previews, while `npm run dev` remains at `http://localhost:5173/`. For a different repository name, custom domain, or root-hosted deployment, adjust the production base and browser-test base URL together. Vite rewrites static HTML assets, imported PDFs, JavaScript, and worker URLs; runtime public-asset and PDF-decoder URLs use `import.meta.env.BASE_URL`.
+
+The lockfile uses public npm registry URLs so GitHub-hosted runners do not need access to the original corporate registry. If a local corporate network blocks public npm, use that network's approved registry as a command-scoped install override without committing private registry URLs or credentials.
+
+Deployment publishes the bundled PDFs and extracted content. Confirm their public distribution is approved before pushing to a Pages-enabled repository. Creating the workflow locally does not change repository settings or publish the site until the changes are pushed and Pages is configured.

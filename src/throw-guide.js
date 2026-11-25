@@ -81,7 +81,7 @@ function videoPreview(technique) {
   image.addEventListener(
     "error",
     () => {
-      image.src = "/handbook-cover.webp";
+      image.src = `${import.meta.env.BASE_URL}handbook-cover.webp`;
       image.alt = "Student handbook cover";
     },
     { once: true },
