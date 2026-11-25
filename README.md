@@ -99,6 +99,12 @@ Browser tests cover all 20 extracted study pages, native reading with PDF reques
 
 Playwright builds the app and runs its own production preview at `http://localhost:4173/wj-study-guide/`. It does not reuse the development server on port 5173, so live edits and Vite reloads do not interrupt a test attempt or the user's preview. Browser tests exercise the production subpath, including local images, PDF references, and thumbnail fallback behavior.
 
+## iOS Home Screen
+
+The Apple touch icon is [public/apple-touch-icon.png](public/apple-touch-icon.png): a 180x180 opaque PNG with the Wichita Judo logo centered on white. The home-screen name is **Wichita Judo**. Vite adjusts the icon link for the GitHub Pages subpath.
+
+After deploying, open the published site in Safari and choose **Share > Add to Home Screen**. iOS caches icons; an existing shortcut may need to be removed and added again to show the new artwork. Removing a home-screen web app can also remove its locally saved progress. This adds an icon and name only, not offline support or a service worker.
+
 ## GitHub Pages
 
 [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) installs dependencies with `npm ci`, builds the app, uploads only `dist`, and deploys through GitHub Pages. It runs on pushes to `main` and can be started manually from the Actions tab. The build job has read-only repository access; only the deployment job receives Pages and identity-token write permissions. Actions are pinned to commit SHAs from Vite's official deployment guide. No custom secret or personal access token is required.

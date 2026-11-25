@@ -34,6 +34,40 @@ function isPdfData(url) {
   return url.pathname.endsWith(".pdf") && !url.searchParams.has("import");
 }
 
+test("iOS home-screen icon and name resolve under the GitHub Pages path", async ({
+  page,
+}) => {
+  await page.route("https://fonts.googleapis.com/**", (route) =>
+    route.fulfill({ contentType: "text/css", body: "" }),
+  );
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await expect(
+    page.locator('meta[name="apple-mobile-web-app-title"]'),
+  ).toHaveAttribute("content", "Wichita Judo");
+  const icon = page.locator('link[rel="apple-touch-icon"]');
+  await expect(icon).toHaveAttribute("sizes", "180x180");
+  await expect(icon).toHaveAttribute(
+    "href",
+    "/wj-study-guide/apple-touch-icon.png",
+  );
+  const url = await icon.getAttribute("href");
+  const response = await page.request.get(url);
+  expect(response.ok()).toBeTruthy();
+  expect(response.headers()["content-type"]).toContain("image/png");
+  const dimensions = await page.evaluate(
+    (src) =>
+      new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve([image.naturalWidth, image.naturalHeight]);
+        image.onerror = () =>
+          reject(new Error("Home-screen icon did not load"));
+        image.src = src;
+      }),
+    url,
+  );
+  expect(dimensions).toEqual([180, 180]);
+});
+
 test("GitHub Pages subpath serves images, PDF references, fallback images, and the PDF viewer", async ({
   page,
   baseURL,
