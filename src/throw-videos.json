@@ -1,0 +1,415 @@
+{
+  "channel": "https://www.youtube.com/@KODOKANJUDO",
+  "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+  "verifiedAt": "2026-11-25",
+  "videos": {
+    "deashiharai": {
+      "id": "4BUUvqxi_Kk",
+      "title": "出足払 / De-ashi-harai",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:18"
+    },
+    "hizaguruma": {
+      "id": "JPJx9-oAVns",
+      "title": "膝車 / Hiza-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:26"
+    },
+    "sasaetsurikomiashi": {
+      "id": "699i--pvYmE",
+      "title": "支釣込足 / Sasae-tsurikomi-ashi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:14"
+    },
+    "ukigoshi": {
+      "id": "bPKwtB4lyOQ",
+      "title": "浮腰 / Uki-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:52"
+    },
+    "osotogari": {
+      "id": "c-A_nP7mKAc",
+      "title": "大外刈 / O-soto-gari",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:45"
+    },
+    "ogoshi": {
+      "id": "yhu1mfy2vJ4",
+      "title": "大腰 / O-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:26"
+    },
+    "ouchigari": {
+      "id": "0itJFhV9pDQ",
+      "title": "大内刈 / O-uchi-gari",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:28"
+    },
+    "seoinage": {
+      "id": "zIq0xI0ogxk",
+      "title": "背負投 / Seoi-nage",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:20"
+    },
+    "kosotogari": {
+      "id": "jeQ541ScLB4",
+      "title": "小外刈 / Ko-soto-gari",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:57"
+    },
+    "kouchigari": {
+      "id": "3Jb3tZvr9Ng",
+      "title": "小内刈 / Ko-uchi-gari",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:32"
+    },
+    "koshiguruma": {
+      "id": "SU7Id6uVJ44",
+      "title": "腰車 / Koshi-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:10"
+    },
+    "tsurikomigoshi": {
+      "id": "McfzA0yRVt4",
+      "title": "釣込腰 / Tsurikomi-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:29"
+    },
+    "okuriashiharai": {
+      "id": "nw1ZdRjrdRI",
+      "title": "送足払 / Okuri-ashi-harai",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:59"
+    },
+    "taiotoshi": {
+      "id": "4x6S3Q-Ktv8",
+      "title": "体落 / Tai-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:16"
+    },
+    "haraigoshi": {
+      "id": "qTo8HlAAkOo",
+      "title": "払腰 / Harai-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:12"
+    },
+    "uchimata": {
+      "id": "iUpSu5J-bgw",
+      "title": "内股 / Uchi-mata",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:51"
+    },
+    "kosotogake": {
+      "id": "8b6kY4s4zH4",
+      "title": "小外掛 / Ko-soto-gake",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:34"
+    },
+    "tsurigoshi": {
+      "id": "51Htlp7xEvE",
+      "title": "釣腰 / Tsuri-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:42"
+    },
+    "yokootoshi": {
+      "id": "MnNG67pF_a0",
+      "title": "横落 / Yoko-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:54"
+    },
+    "ashiguruma": {
+      "id": "ROeayhvom9U",
+      "title": "足車 / Ashi-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:57"
+    },
+    "hanegoshi": {
+      "id": "M9_7De6A1kk",
+      "title": "跳腰 / Hane-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:17"
+    },
+    "haraitsurikomiashi": {
+      "id": "gGPXvWL8VbE",
+      "title": "払釣込足 / Harai-tsurikomi-ashi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:34"
+    },
+    "tomoenage": {
+      "id": "880WbHvHv6A",
+      "title": "巴投 / Tomoe-nage",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:55"
+    },
+    "kataguruma": {
+      "id": "cnHRhSy8yi4",
+      "title": "肩車 / Kata-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:10"
+    },
+    "sumigaeshi": {
+      "id": "5VhduA5xkbA",
+      "title": "隅返 / Sumi-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:01"
+    },
+    "taniotoshi": {
+      "id": "3b9Me3Fohpk",
+      "title": "谷落 / Tani-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:19"
+    },
+    "hanemakikomi": {
+      "id": "6CRBGLGz9j8",
+      "title": "跳巻込 / Hane-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:00"
+    },
+    "sukuinage": {
+      "id": "vU6aJ2kFxoI",
+      "title": "掬投 / Sukui-nage",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:47"
+    },
+    "utsurigoshi": {
+      "id": "4pQd_bEnlf0",
+      "title": "移腰 / Utsuri-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:59"
+    },
+    "oguruma": {
+      "id": "SnZciTAY9vc",
+      "title": "大車 / O-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:00"
+    },
+    "sotomakikomi": {
+      "id": "bWG9O1BVKtQ",
+      "title": "外巻込 / Soto-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:58"
+    },
+    "ukiotoshi": {
+      "id": "6H5tmncOY4Q",
+      "title": "浮落 / Uki-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:56"
+    },
+    "osotoguruma": {
+      "id": "92KbCm6pQeI",
+      "title": "大外車 / O-soto-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:01"
+    },
+    "ukiwaza": {
+      "id": "weVOpJ63gII",
+      "title": "浮技 / Uki-waza",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:03"
+    },
+    "yokowakare": {
+      "id": "bp1tscHlePI",
+      "title": "横分 / Yoko-wakare",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:35"
+    },
+    "yokoguruma": {
+      "id": "MehP6I5cY2c",
+      "title": "横車 / Yoko-guruma",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:12"
+    },
+    "ushirogoshi": {
+      "id": "ORIYstuxYT8",
+      "title": "後腰 / Ushiro-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:04"
+    },
+    "uranage": {
+      "id": "Fgi9b8DJ5sQ",
+      "title": "裏投 / Ura-nage",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:29"
+    },
+    "sumiotoshi": {
+      "id": "lLU9wv52ni0",
+      "title": "隅落 / Sumi-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:52"
+    },
+    "yokogake": {
+      "id": "tP1Sj1uDfSo",
+      "title": "横掛 / Yoko-gake",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:07"
+    },
+    "obiotoshi": {
+      "id": "ff8U2TVZIYI",
+      "title": "帯落 / Obi-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:15"
+    },
+    "seoiotoshi": {
+      "id": "vu1TMVNnq34",
+      "title": "背負落 / Seoi-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:21"
+    },
+    "yamaarashi": {
+      "id": "MGlyKmSuzdc",
+      "title": "山嵐 / Yama-arashi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:25"
+    },
+    "osotootoshi": {
+      "id": "2DsVvDw7b8g",
+      "title": "大外落 / O-soto-otoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:04"
+    },
+    "dakiwakare": {
+      "id": "Hr0cOMGBDYo",
+      "title": "抱分 / Daki-wakare",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:13"
+    },
+    "hikikomigaeshi": {
+      "id": "92zUYWBp5N8",
+      "title": "引込返 / Hikikomi-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:59"
+    },
+    "tawaragaeshi": {
+      "id": "TmTWgrmViZc",
+      "title": "俵返 / Tawara-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:06"
+    },
+    "uchimakikomi": {
+      "id": "5BowcjduxVc",
+      "title": "内巻込 / Uchi-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:07"
+    },
+    "morotegari": {
+      "id": "BHLQS4K85bs",
+      "title": "双手刈 / Morote-gari",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:49"
+    },
+    "kuchikitaoshi": {
+      "id": "ZNL47q1aJNY",
+      "title": "朽木倒 / Kuchiki-taoshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:09"
+    },
+    "kibisugaeshi": {
+      "id": "tJylJYfBliA",
+      "title": "踵返 / Kibisu-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:03"
+    },
+    "uchimatasukashi": {
+      "id": "V-RS3uhtVWM",
+      "title": "内股すかし / Uchi-mata-sukashi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:51"
+    },
+    "tsubamegaeshi": {
+      "id": "GwweWqqFB5g",
+      "title": "燕返 / Tsubame-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:04"
+    },
+    "kouchigaeshi": {
+      "id": "_MWAdYi_LC4",
+      "title": "小内返 / Ko-uchi-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:36"
+    },
+    "ouchigaeshi": {
+      "id": "dCyZTXyjIXE",
+      "title": "大内返 / O-uchi-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:02"
+    },
+    "osotogaeshi": {
+      "id": "8ZjM3X_EANo",
+      "title": "大外返 / O-soto-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:14"
+    },
+    "haraigoshigaeshi": {
+      "id": "4U3It-7PPsc",
+      "title": "払腰返 / Harai-goshi-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:43"
+    },
+    "uchimatagaeshi": {
+      "id": "Sy6sLWxkWYw",
+      "title": "内股返 / Uchi-mata-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:44"
+    },
+    "hanegoshigaeshi": {
+      "id": "9bZAZSBtnGs",
+      "title": "跳腰返 / Hane-goshi-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:42"
+    },
+    "kanibasami": {
+      "id": "OR-HGHnarYc",
+      "title": "蟹挟 /  Kani-basami",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:44"
+    },
+    "osotomakikomi": {
+      "id": "DGDv2oMwmas",
+      "title": "大外巻込 / O-soto-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:10"
+    },
+    "kawazugake": {
+      "id": "w6G57bWACi0",
+      "title": "河津掛 /  Kawazu-gake",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:34"
+    },
+    "haraimakikomi": {
+      "id": "VBaHzKaCXss",
+      "title": "払巻込 /  Harai-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:07"
+    },
+    "uchimatamakikomi": {
+      "id": "jZXENTLpJCI",
+      "title": "内股巻込 / Uchi-mata-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:51"
+    },
+    "sodetsurikomigoshi": {
+      "id": "QsmAxpmYLOI",
+      "title": "袖釣込腰 / Sode-tsurikomi-goshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:37"
+    },
+    "ipponseoinage": {
+      "id": "FQnOlCxo4oI",
+      "title": "一本背負投 / Ippon-seoi-nage",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "0:54"
+    },
+    "obitorigaeshi": {
+      "id": "bpc82SrunUU",
+      "title": "帯取返 / Obi-tori-gaeshi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:27"
+    },
+    "kouchimakikomi": {
+      "id": "_1eygIXLD_w",
+      "title": "小内巻込 /  Ko-uchi-makikomi",
+      "channelId": "UCtF6tu7GuZYkZzht5MIv8UQ",
+      "duration": "1:01"
+    }
+  }
+}

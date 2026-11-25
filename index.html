@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#092d62" />
+    <meta
+      name="description"
+      content="Wichita Judo student guides, rank requirements, and technique references."
+    />
+    <title>Wichita Judo | Study Companion</title>
+    <link rel="icon" type="image/png" href="/wichita-judo.png" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="Wichita Judo home">
+        <img src="/wichita-judo.png" alt="" />
+        <span>WICHITA JUDO<small>STUDY COMPANION</small></span>
+      </a>
+      <div class="topbar-right">
+        <span class="dojo-motto">Where the spirit of judo comes first.</span
+        ><span class="edition">STUDENT EDITION</span>
+      </div>
+    </header>
+
+    <div class="app-layout">
+      <aside class="sidebar" aria-label="Study navigation">
+        <p class="section-label">YOUR PRACTICE</p>
+        <nav class="task-nav" aria-label="Main tasks">
+          <button
+            class="task active"
+            data-task="study"
+            aria-current="page"
+            aria-label="Study Guide Ranks &amp; requirements"
+          >
+            <i data-lucide="book-open"></i
+            ><span>Study Guide<small>Ranks &amp; requirements</small></span
+            ><i data-lucide="chevron-right"></i>
+          </button>
+          <button
+            class="task"
+            data-task="throw"
+            aria-label="Throw Guide Techniques &amp; reference"
+          >
+            <i data-lucide="person-standing"></i
+            ><span>Throw Guide<small>Techniques &amp; reference</small></span
+            ><i data-lucide="chevron-right"></i>
+          </button>
+          <button
+            class="task"
+            data-task="test"
+            aria-label="Practice Test Vocabulary &amp; general info"
+          >
+            <i data-lucide="clipboard-check"></i
+            ><span
+              >Practice Test<small>Vocabulary &amp; general info</small></span
+            ><i data-lucide="chevron-right"></i>
+          </button>
+        </nav>
+        <div class="contents-heading">
+          <p class="section-label" id="contents-title">IN THIS GUIDE</p>
+          <span id="chapter-count"></span>
+        </div>
+        <nav id="chapters" aria-label="Document sections"></nav>
+        <div class="library">
+          <p class="section-label">
+            YOUR LIBRARY <i data-lucide="library"></i>
+          </p>
+          <button class="book active" data-book="guide">
+            <img
+              src="/guide-cover.webp"
+              alt="Senior student guide cover"
+            /><span
+              >Student Guide<small>Rank requirements</small
+              ><span class="book-meta"
+                >GUIDE <span>10 sections</span></span
+              ></span
+            ><i data-lucide="check"></i>
+          </button>
+          <button class="book" data-book="handbook">
+            <img src="/handbook-cover.webp" alt="Student handbook cover" /><span
+              >Student Handbook<small>Dojo reference</small
+              ><span class="book-meta">PDF <span>74 pages</span></span></span
+            ><i data-lucide="check"></i>
+          </button>
+        </div>
+        <div class="sidebar-footer">
+          <span class="footer-mark"></span
+          ><span
+            >WICHITA, KANSAS<small>On the mat. Beyond the mat.</small></span
+          >
+        </div>
+      </aside>
+
+      <main>
+        <div class="page-heading">
+          <div>
+            <p class="eyebrow">
+              WICHITA JUDO <span>/</span>
+              <span id="breadcrumb">STUDENT RESOURCES</span>
+            </p>
+            <h1 id="task-title">Study Guide<span>.</span></h1>
+            <p id="task-description">
+              Senior rank requirements &amp; testing manual
+            </p>
+          </div>
+          <a
+            id="open-original"
+            class="outline-button"
+            target="_blank"
+            rel="noopener"
+            ><i data-lucide="external-link"></i
+            ><span>View reference PDF</span></a
+          >
+        </div>
+
+        <section
+          id="study-guide"
+          class="study-guide"
+          aria-label="Study guide"
+        ></section>
+
+        <section
+          id="throw-guide"
+          class="throw-guide"
+          aria-label="Throw guide"
+          hidden
+        ></section>
+
+        <section
+          id="practice-test"
+          class="practice-test"
+          aria-label="Practice test"
+          hidden
+        ></section>
+
+        <section class="reader" aria-label="PDF reader" hidden>
+          <div class="reader-document">
+            <div class="document-icon"><i data-lucide="file-text"></i></div>
+            <div>
+              <h2 id="document-name">Senior Student Guide</h2>
+              <p id="document-meta">
+                Wichita Judo <span> / </span> Student resources
+              </p>
+            </div>
+            <span class="pdf-badge">PDF</span>
+          </div>
+          <div class="reader-toolbar" role="toolbar" aria-label="PDF controls">
+            <div class="toolbar-group pagination">
+              <button
+                class="icon-button"
+                id="previous"
+                aria-label="Previous page"
+                title="Previous page"
+              >
+                <i data-lucide="chevron-left"></i></button
+              ><label class="page-label"
+                >Page
+                <input
+                  id="page-number"
+                  type="number"
+                  min="1"
+                  value="1"
+                  aria-label="Page number" /></label
+              ><span class="page-total">of <span id="page-count">20</span></span
+              ><button
+                class="icon-button"
+                id="next"
+                aria-label="Next page"
+                title="Next page"
+              >
+                <i data-lucide="chevron-right"></i>
+              </button>
+            </div>
+            <div class="toolbar-group zoom">
+              <button
+                class="icon-button"
+                id="zoom-out"
+                aria-label="Zoom out"
+                title="Zoom out"
+              >
+                <i data-lucide="minus"></i></button
+              ><select id="zoom" aria-label="Page zoom">
+                <option value="fit">Fit width</option>
+                <option value="0.75">75%</option>
+                <option value="1">100%</option>
+                <option value="1.25">125%</option>
+                <option value="1.5">150%</option>
+                <option value="2">200%</option></select
+              ><button
+                class="icon-button"
+                id="zoom-in"
+                aria-label="Zoom in"
+                title="Zoom in"
+              >
+                <i data-lucide="plus"></i>
+              </button>
+            </div>
+            <div class="toolbar-group reader-actions">
+              <button
+                class="icon-button"
+                id="bookmark"
+                aria-label="Bookmark page"
+                title="Bookmark page"
+                aria-pressed="false"
+              >
+                <i data-lucide="bookmark"></i></button
+              ><button
+                class="icon-button"
+                id="fullscreen"
+                aria-label="Toggle fullscreen"
+                title="Toggle fullscreen"
+              >
+                <i data-lucide="maximize"></i></button
+              ><a
+                class="icon-button"
+                id="download"
+                download
+                aria-label="Download PDF"
+                title="Download PDF"
+                ><i data-lucide="download"></i
+              ></a>
+            </div>
+          </div>
+          <div class="paper-stage" id="paper-stage" aria-label="Document page">
+            <output id="loading">Loading document...</output>
+            <div class="paper" id="paper">
+              <canvas
+                id="pdf-canvas"
+                aria-label="Student guide page 1"
+              ></canvas>
+              <div id="text-layer" class="textLayer"></div>
+            </div>
+            <div id="error" role="alert" hidden>
+              <i data-lucide="file-warning"></i>
+              <h3>This page couldn't be displayed.</h3>
+              <p>The original PDF is still available.</p>
+              <button id="retry" class="outline-button">Try again</button>
+            </div>
+          </div>
+          <div class="reader-footer">
+            <span
+              ><span class="status-dot"></span
+              ><output id="reading-status">Student Guide</output></span
+            ><button id="saved-page" hidden>
+              <i data-lucide="bookmark"></i><span></span></button
+            ><span id="footer-page">01 / 20</span>
+          </div>
+        </section>
+        <footer class="main-footer">
+          <span>WICHITA JUDO</span><span>Respect. Practice. Progress.</span>
+        </footer>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
