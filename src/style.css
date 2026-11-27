@@ -2118,6 +2118,35 @@ select {
   color: var(--answer-color);
   font-weight: 600;
 }
+.test-choice-explanations {
+  margin-top: 20px;
+  border-left: 3px solid #3c6789;
+  background: #f0f5f8;
+  padding: 18px 24px;
+}
+.test-choice-explanations h3 {
+  margin: 0 0 14px;
+  color: var(--blue);
+  font-size: 12px;
+}
+.test-choice-explanation + .test-choice-explanation {
+  border-top: 1px solid #d5e0e9;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.test-choice-explanation h4 {
+  margin: 0 0 6px;
+  color: #28466c;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.test-choice-explanation p {
+  margin: 0 0 6px;
+  color: #435b72;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
 .test-navigation {
   border-top: 1px solid var(--line);
   padding: 20px 0;

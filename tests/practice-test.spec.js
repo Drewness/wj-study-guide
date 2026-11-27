@@ -6,6 +6,7 @@ import {
   createTestQuestions,
   summarizeTest,
   checkPracticeAnswer,
+  getChoiceExplanation,
 } from "../src/practice-test-content.js";
 import {
   createQuestionChoices,
@@ -68,6 +69,146 @@ async function seedQuestions(
   await page.goto("./", { waitUntil: "domcontentloaded" });
   await openTest(page);
 }
+
+test("incorrect selections show source-backed explanations and an honest fallback", async ({
+  page,
+}) => {
+  const founder = testQuestionBank.find(
+    (question) => question.answer === "Jigoro Kano",
+  );
+  const uniform = testQuestionBank.find(
+    (question) => question.answer === "Obi",
+  );
+  const year = testQuestionBank.find((question) => question.answer === "1882");
+  expect(getChoiceExplanation("Yoshitsugu Yamishita", founder.id)).toEqual({
+    text: "The guide lists this person as one of the Four Heavenly Lords of Judo.",
+    page: 12,
+  });
+  expect(getChoiceExplanation("Uwagi", uniform.id)).toEqual({
+    text: "The guide defines this as: Judo Uniform Jacket.",
+    page: 13,
+  });
+  expect(getChoiceExplanation("1984", year.id)).toBeNull();
+  await page.route("https://fonts.googleapis.com/**", (route) =>
+    route.fulfill({ contentType: "text/css", body: "" }),
+  );
+  await page.addInitScript(
+    ({ founderId, uniformId, yearId }) => {
+      if (!localStorage.getItem("wj:test:session"))
+        localStorage.setItem(
+          "wj:test:session",
+          JSON.stringify({
+            config: {
+              rank: "sankyu",
+              categories: ["general", "vocabulary"],
+              count: "all",
+            },
+            questionIds: [founderId, uniformId, yearId],
+            answers: {},
+            index: 0,
+            stage: "active",
+            choiceSets: {
+              [founderId]: [
+                "Jigoro Kano",
+                "Yoshitsugu Yamishita",
+                "Shiro Saigo",
+                "Kyuzo Mifune",
+              ],
+              [uniformId]: ["Obi", "Uwagi", "Zubon", "Sode"],
+              [yearId]: ["1882", "1964", "1984", "1992"],
+            },
+          }),
+        );
+    },
+    { founderId: founder.id, uniformId: uniform.id, yearId: year.id },
+  );
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await openTest(page);
+  if (test.info().project.name === "mobile")
+    await page.setViewportSize({ width: 320, height: 900 });
+  await expect(page.locator("#test-choice-explanations")).toBeHidden();
+  await page
+    .getByRole("radio", { name: "Yoshitsugu Yamishita", exact: true })
+    .check();
+  await expect(page.locator("#test-choice-explanations")).toBeHidden();
+  await page
+    .getByRole("button", { name: "Next question", exact: true })
+    .click();
+  const box = page.getByRole("region", { name: "About your selection" });
+  await expect(box).toBeVisible();
+  await expect(
+    box.getByRole("heading", { name: "Yoshitsugu Yamishita" }),
+  ).toBeVisible();
+  await expect(box).toContainText("one of the Four Heavenly Lords of Judo");
+  await expect(
+    box.getByRole("link", { name: "Student Guide - PDF page 12" }),
+  ).toHaveAttribute("href", /#page=12$/);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await page.screenshot({
+    path: `test-results/${test.info().project.name}-choice-explanation.png`,
+    fullPage: true,
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(
+    page.getByRole("region", { name: "About your selection" }),
+  ).toContainText("Yoshitsugu Yamishita");
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(box).toBeHidden();
+  await page.getByRole("radio", { name: "Uwagi", exact: true }).check();
+  await page
+    .getByRole("button", { name: "Next question", exact: true })
+    .click();
+  await expect(box).toContainText("Judo Uniform Jacket");
+  await expect(
+    box.getByRole("link", { name: "Student Guide - PDF page 13" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("radio", { name: "1984", exact: true }).check();
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  await expect(box).toContainText(
+    "No explanation for this selection is available in the study guide.",
+  );
+  await expect(box.getByRole("link")).toHaveCount(0);
+});
+
+test("multi-select explanations cover each wrong selection and stay hidden for a correct set", async ({
+  page,
+}) => {
+  const question = testQuestionBank.find(
+    (entry) => entry.prompt === "Name the Four Heavenly Lords of Judo.",
+  );
+  const correct = getMultiSelectAnswers(question);
+  await seedQuestions(page, [question.id], "yonkyu", true);
+  const options = await page
+    .locator("#test-choices input")
+    .evaluateAll((inputs) => inputs.map((input) => input.value));
+  const wrong = options
+    .filter((option) => !correct.includes(option))
+    .slice(0, 2);
+  for (const name of [...correct.slice(0, 2), ...wrong])
+    await page.getByRole("checkbox", { name, exact: true }).check();
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  const box = page.getByRole("region", { name: "About your selection" });
+  await expect(box.locator(".test-choice-explanation")).toHaveCount(2);
+  for (const name of wrong)
+    await expect(box.getByRole("heading", { name, exact: true })).toBeVisible();
+  for (const name of correct)
+    await expect(box.getByRole("heading", { name, exact: true })).toHaveCount(
+      0,
+    );
+  await page.getByRole("button", { name: "View results", exact: true }).click();
+  await page.getByRole("button", { name: "Retry missed questions" }).click();
+  await expect(page.locator("#test-choice-explanations")).toBeHidden();
+  for (const name of correct)
+    await page.getByRole("checkbox", { name, exact: true }).check();
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  await expect(page.locator("#test-choice-explanations")).toBeHidden();
+});
 
 test("vocabulary terms stand out without changing general-information headings or overflowing mobile", async ({
   page,

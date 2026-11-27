@@ -16,6 +16,7 @@ import {
   createTestQuestions,
   summarizeTest,
   checkPracticeAnswer,
+  getChoiceExplanation,
 } from "./practice-test-content.js";
 import {
   createChoiceSets,
@@ -274,6 +275,7 @@ export function createPracticeTest({
       <section id="test-answer-panel" class="test-answer-panel" aria-label="Answer review" hidden><h3 id="test-answer-title">Guide answer</h3><p id="test-answer"></p><p id="test-source-note" class="source-note" hidden></p><a id="test-source" class="source-link" target="_blank" rel="noopener"></a><div id="test-references"></div>
         <div class="test-ratings"><button id="test-correct" class="outline-button" aria-pressed="false"><i data-lucide="check"></i>Got it</button><button id="test-review" class="outline-button" aria-pressed="false"><i data-lucide="flag"></i>Needs review</button><button id="test-reviewed" class="outline-button" aria-pressed="false" hidden><i data-lucide="check"></i>Mark reviewed</button></div>
       </section>
+      <section id="test-choice-explanations" class="test-choice-explanations" aria-labelledby="test-choice-explanations-title" hidden><h3 id="test-choice-explanations-title">About your selection</h3><div id="test-choice-explanations-content"></div></section>
       <nav class="test-navigation" aria-label="Test questions"><button id="test-previous" class="outline-button"><i data-lucide="arrow-left"></i>Previous question</button><button id="test-next" class="primary-button"><span>Next question</span><i data-lucide="arrow-right"></i></button></nav>
     </div>
     <div id="test-results" hidden>
@@ -434,6 +436,48 @@ export function createPracticeTest({
     return Boolean(choices);
   }
 
+  function renderChoiceExplanations(question, answer, choices) {
+    const section = find("test-choice-explanations");
+    const content = find("test-choice-explanations-content");
+    const selected = getMultiSelectAnswers(question).length
+      ? (answer.selected ?? [])
+      : [answer.text];
+    const incorrect = (choices && answer.revealed ? selected : []).filter(
+      (choice) =>
+        choices.includes(choice) &&
+        choiceFeedback(question, answer, choice, true)?.result === "review",
+    );
+    section.hidden = incorrect.length === 0;
+    content.replaceChildren();
+    for (const choice of incorrect) {
+      const item = node("div", undefined, "test-choice-explanation");
+      const explanation = getChoiceExplanation(choice, question.id);
+      item.append(node("h4", choice));
+      const position = choiceFeedback(question, answer, choice, true)?.text;
+      if (getMultiSelectDefinition(question)?.ordered)
+        item.append(node("p", position));
+      item.append(
+        node(
+          "p",
+          explanation?.text ??
+            "No explanation for this selection is available in the study guide.",
+        ),
+      );
+      if (explanation) {
+        const link = node(
+          "a",
+          `Student Guide - PDF page ${explanation.page}`,
+          "source-link",
+        );
+        link.href = `${sourceUrl}#page=${explanation.page}`;
+        link.target = "_blank";
+        link.rel = "noopener";
+        item.append(link);
+      }
+      content.append(item);
+    }
+  }
+
   function renderQuestion(focus = false) {
     const all = questions();
     const question = all[session.index];
@@ -472,6 +516,11 @@ export function createPracticeTest({
       `Senior Student Guide - PDF page ${question.page}`;
     find("test-source").href = `${sourceUrl}#page=${question.page}`;
     find("test-references").replaceChildren(referenceLinks(question));
+    renderChoiceExplanations(
+      question,
+      answer,
+      session.choiceSets?.[question.id],
+    );
     find("test-correct").hidden = !question.hasAnswer || multipleChoice;
     find("test-review").hidden = !question.hasAnswer || multipleChoice;
     find("test-reviewed").hidden = question.hasAnswer;

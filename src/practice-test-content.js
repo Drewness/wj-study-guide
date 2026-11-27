@@ -1,5 +1,8 @@
 import { studySections } from "./study-content.js";
-import { withSupplementalAnswer } from "./practice-test-multiselect.js";
+import {
+  getMultiSelectDefinition,
+  withSupplementalAnswer,
+} from "./practice-test-multiselect.js";
 
 const rankOrder = ["rokyu", "gokyu", "yonkyu", "sankyu", "nikyu", "ikkyu"];
 
@@ -62,6 +65,50 @@ export const testQuestionBank = rankOrder
     return section.pages.flatMap((page) => pageQuestions(section, page));
   })
   .map(withSupplementalAnswer);
+
+export function getChoiceExplanation(choice, currentQuestionId) {
+  const term = choice.toLowerCase();
+  const vocabulary = testQuestionBank.find(
+    (question) =>
+      question.id !== currentQuestionId &&
+      question.category === "vocabulary" &&
+      question.answer.toLowerCase() === term,
+  );
+  if (vocabulary)
+    return {
+      text: `The guide defines this as: ${vocabulary.prompt.replace("Complete the vocabulary pair: ", "")}.`,
+      page: vocabulary.page,
+    };
+  const english = testQuestionBank.find(
+    (question) =>
+      question.id !== currentQuestionId &&
+      question.category === "vocabulary" &&
+      question.prompt
+        .replace("Complete the vocabulary pair: ", "")
+        .toLowerCase() === term,
+  );
+  if (english)
+    return {
+      text: `The guide pairs this with: ${english.answer}.`,
+      page: english.page,
+    };
+  const related = testQuestionBank.find(
+    (question) =>
+      question.id !== currentQuestionId &&
+      question.category === "general" &&
+      !question.supplemental &&
+      (question.answer.toLowerCase() === term ||
+        getMultiSelectDefinition(question)?.answers.includes(choice)),
+  );
+  if (related) {
+    const text =
+      related.id === "yonkyu:general:12:1:1"
+        ? "The guide lists this person as one of the Four Heavenly Lords of Judo."
+        : `The guide lists this in response to: ${related.prompt}`;
+    return { text, page: related.page };
+  }
+  return null;
+}
 
 export function getQuestionPool(rank, categories = ["vocabulary", "general"]) {
   const ceiling = rankOrder.indexOf(rank);
