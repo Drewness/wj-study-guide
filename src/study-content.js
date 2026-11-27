@@ -304,7 +304,7 @@ export const studySections = [
               ["Judo Instructor", "Sensei"],
               ["Sitting on Knees", "Seiza"],
               ["Sitting Cross Legged", "Anza"],
-              ["Slide Foot Walking", "Tsugi Ashi"],
+              ["Follow Foot Walking", "Tsugi Ashi"],
               ["Normal Walking", "Ayumi Ashi"],
               ["Judo Uniform", "Judogi"],
               ["Judo Player", "Judoka"],
@@ -329,7 +329,7 @@ export const studySections = [
             ],
           },
         ],
-        note: "The source reverses these terms. The entries above have been corrected: Left is Hidari and Right is Migi.",
+        note: "The source reverses these terms. The entries above have been corrected: Left is Hidari and Right is Migi. The PDF also says \"Slide Foot Walking\"; the app uses \"Follow Foot Walking\" for Tsugi Ashi.",
       },
       {
         number: 8,
