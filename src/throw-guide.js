@@ -484,5 +484,25 @@ export function createThrowGuide({
     createIcons({ icons });
   });
   find("throw-handbook").addEventListener("click", () => onOpenReference());
-  return { show: render, hide: () => find("throw-detail").replaceChildren() };
+  return {
+    show: render,
+    hide: () => find("throw-detail").replaceChildren(),
+    reset() {
+      const keys = [
+        "throws:state",
+        ...practiceRanks.map((rank) => `throws:checks:${rank.id}`),
+      ];
+      if (!keys.every((key) => storage.remove(key))) return false;
+      Object.assign(state, {
+        mode: "catalog",
+        query: "",
+        group: "all",
+        rank: "all",
+        practiceRank: "rokyu",
+        selected: throwingTechniques[0].id,
+      });
+      render();
+      return true;
+    },
+  };
 }

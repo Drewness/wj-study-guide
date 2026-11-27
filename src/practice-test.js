@@ -26,6 +26,7 @@ import {
   gradeMultiSelect,
 } from "./practice-test-choices.js";
 import { getMultiSelectDefinition } from "./practice-test-multiselect.js";
+import { getMissedQuestions, updateMissed, createMissedReview } from "./review-history.js";
 
 const icons = {
   Play,
@@ -260,6 +261,7 @@ export function createPracticeTest({
         <fieldset class="test-categories"><legend>Question types</legend><label><input id="test-vocabulary" type="checkbox" checked />Vocabulary</label><label><input id="test-general" type="checkbox" checked />General information</label></fieldset>
         <div class="test-pool"><div><h3>Included ranks</h3><p id="test-scope">No rank selected</p></div><output id="test-pool-count">0 questions available</output></div>
         <button id="test-start" class="primary-button" type="submit" disabled><i data-lucide="play"></i>Start test</button>
+        <div class="test-missed-actions"><button id="test-review-history" class="outline-button" type="button" disabled><i data-lucide="flag"></i>Review missed questions</button><output id="test-review-count"></output></div>
       </form>
     </div>
     <div id="test-active" hidden>
@@ -304,6 +306,10 @@ export function createPracticeTest({
 
   function persist() {
     storage.write("test:session", session);
+  }
+  function recordRating(question, rating) {
+    const history = updateMissed(storage.read("test:missed", []), question.id, rating);
+    storage.write("test:missed", history);
   }
   function questions() {
     return session.questionIds.map((id) => questionById.get(id));
@@ -356,6 +362,10 @@ export function createPracticeTest({
       : "No rank selected";
     find("test-pool-count").textContent = `${pool.length} questions available`;
     find("test-start").disabled = pool.length === 0;
+    const missed = settings.rank ? getMissedQuestions(storage.read("test:missed", []), settings.rank, settings.categories) : [];
+    find("test-review-history").disabled = missed.length === 0;
+    const questionLabel = missed.length === 1 ? "question" : "questions";
+    find("test-review-count").textContent = settings.rank ? `${missed.length} missed ${questionLabel} available` : "Select a rank to review missed questions.";
     renderCoverage();
   }
 
@@ -458,9 +468,15 @@ export function createPracticeTest({
         item.append(node("p", position));
       const description = node("p");
       if (explanation?.value) {
-        description.append(document.createTextNode(explanation.prefix), node("strong", explanation.value), document.createTextNode("."));
+        description.append(
+          document.createTextNode(explanation.prefix),
+          node("strong", explanation.value),
+          document.createTextNode("."),
+        );
       } else {
-        description.textContent = explanation?.text ?? "No explanation for this selection is available in the study guide.";
+        description.textContent =
+          explanation?.text ??
+          "No explanation for this selection is available in the study guide.";
       }
       item.append(description);
       if (explanation) {
@@ -633,6 +649,7 @@ export function createPracticeTest({
     if (!session.answers[question.id]?.revealed) return;
     session.answers[question.id].rating = rating;
     session.answers[question.id].checked = false;
+    recordRating(question, rating);
     renderQuestion();
   }
 
@@ -651,6 +668,10 @@ export function createPracticeTest({
   find("test-settings").addEventListener("submit", (event) => {
     event.preventDefault();
     if (!find("test-start").disabled) begin(createTestQuestions(settings));
+  });
+  find("test-review-history").addEventListener("click", () => {
+    const missed = createMissedReview(storage.read("test:missed", []), settings.rank, settings.categories);
+    if (missed.length) begin(missed);
   });
   find("test-response").addEventListener("input", (event) => {
     if (!session) return;
@@ -698,6 +719,7 @@ export function createPracticeTest({
         answer,
         session.choiceSets?.[question.id],
       ).rating;
+      recordRating(question, answer.rating);
       answer.revealed = true;
       answer.checked = true;
       renderQuestion();
@@ -730,5 +752,23 @@ export function createPracticeTest({
       session.config,
     ),
   );
-  return { show: render };
+  return {
+    show: render,
+    reset() {
+      if (
+        !["test:session", "test:settings", "test:missed"].every((key) => storage.remove(key))
+      )
+        return false;
+      session = null;
+      settings = validSettings({});
+      find("test-rank").value = settings.rank;
+      find("test-count").value = settings.count;
+      find("test-format").value = settings.format;
+      find("test-vocabulary").checked =
+        settings.categories.includes("vocabulary");
+      find("test-general").checked = settings.categories.includes("general");
+      render();
+      return true;
+    },
+  };
 }

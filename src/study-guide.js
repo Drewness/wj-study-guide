@@ -191,5 +191,17 @@ export function createStudyGuide({ container, chapters, sourceUrl, storage }) {
     .querySelector("#study-next")
     .addEventListener("click", () => step(1));
   createIcons({ icons: { ChevronLeft, ChevronRight } });
-  return { show: () => showSection(currentId) };
+  return {
+    show: () => showSection(currentId),
+    reset() {
+      if (
+        !["study:section", "guide:page", "guide:bookmark"].every((key) =>
+          storage.remove(key),
+        )
+      )
+        return false;
+      showSection("overview");
+      return true;
+    },
+  };
 }

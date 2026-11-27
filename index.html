@@ -58,6 +58,7 @@
               >Practice Test<small>Vocabulary &amp; general info</small></span
             ><i data-lucide="chevron-right"></i>
           </button>
+          <button class="task" data-task="cards" aria-label="Flashcards Vocabulary practice"><i data-lucide="layers"></i><span>Flashcards<small>Vocabulary practice</small></span><i data-lucide="chevron-right"></i></button>
         </nav>
         <div class="contents-heading">
           <p class="section-label" id="contents-title">IN THIS GUIDE</p>
@@ -106,15 +107,55 @@
               Senior rank requirements &amp; testing manual
             </p>
           </div>
-          <a
-            id="open-original"
-            class="outline-button"
-            target="_blank"
-            rel="noopener"
-            ><i data-lucide="external-link"></i
-            ><span>View reference PDF</span></a
-          >
+          <div class="heading-actions">
+            <button
+              id="print-cards"
+              class="outline-button"
+              type="button"
+              title="Print flashcards"
+              aria-label="Print flashcards"
+              hidden
+            >
+              <i data-lucide="printer"></i><span>Print</span>
+            </button>
+            <button
+              id="reset-task"
+              class="outline-button"
+              type="button"
+              title="Reset Study Guide"
+              aria-label="Reset Study Guide"
+            >
+              <i data-lucide="rotate-ccw"></i><span>Reset</span>
+            </button>
+            <a
+              id="open-original"
+              class="outline-button"
+              target="_blank"
+              rel="noopener"
+              ><i data-lucide="external-link"></i
+              ><span>View reference PDF</span></a
+            >
+          </div>
         </div>
+        <output id="reset-status" class="reset-status"></output>
+
+        <dialog
+          id="reset-dialog"
+          class="reset-dialog"
+          aria-labelledby="reset-dialog-title"
+          aria-describedby="reset-dialog-description"
+        >
+          <form method="dialog">
+            <h2 id="reset-dialog-title">Reset task?</h2>
+            <p id="reset-dialog-description"></p>
+            <div class="reset-dialog-actions">
+              <button value="cancel" class="outline-button" autofocus>
+                Cancel
+              </button>
+              <button value="confirm" class="primary-button">Reset</button>
+            </div>
+          </form>
+        </dialog>
 
         <section
           id="study-guide"
@@ -135,6 +176,8 @@
           aria-label="Practice test"
           hidden
         ></section>
+
+        <section id="flashcards" class="flashcards" aria-label="Vocabulary flashcards" hidden></section>
 
         <section class="reader" aria-label="PDF reader" hidden>
           <div class="reader-document">

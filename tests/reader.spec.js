@@ -34,6 +34,251 @@ function isPdfData(url) {
   return url.pathname.endsWith(".pdf") && !url.searchParams.has("import");
 }
 
+async function seedResetState(page, values) {
+  await page.route("https://fonts.googleapis.com/**", (route) =>
+    route.fulfill({ contentType: "text/css", body: "" }),
+  );
+  await page.addInitScript((initial) => {
+    if (localStorage.getItem("wj:reset-test-seeded")) return;
+    for (const [key, value] of Object.entries(initial))
+      localStorage.setItem(`wj:${key}`, JSON.stringify(value));
+    localStorage.setItem("wj:reset-test-seeded", "true");
+  }, values);
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+}
+
+async function confirmReset(page, task) {
+  await page
+    .getByRole("button", { name: `Reset ${task}`, exact: true })
+    .click();
+  const dialog = page.getByRole("dialog", { name: `Reset ${task}?` });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("#reset-status")).toHaveText(`${task} reset.`);
+}
+
+test("Study Guide reset confirms, returns to cover, and preserves other tasks", async ({
+  page,
+}) => {
+  await seedResetState(page, {
+    "study:section": "rokyu",
+    "guide:page": 7,
+    "guide:bookmark": 9,
+    "handbook:bookmark": 34,
+    "test:settings": { rank: "gokyu" },
+    "throws:checks:rokyu": ["O Soto Gari - Major Outside Reap"],
+  });
+  await expect(page.locator("#study-section-title")).toHaveText("Rokyu");
+  const button = page.getByRole("button", {
+    name: "Reset Study Guide",
+    exact: true,
+  });
+  await button.click();
+  const dialog = page.getByRole("dialog", { name: "Reset Study Guide?" });
+  await expect(dialog).toContainText("saved reading position");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.locator("#study-section-title")).toHaveText("Rokyu");
+  await expect(button).toBeFocused();
+  await confirmReset(page, "Study Guide");
+  await expect(page.locator("#study-section-title")).toHaveText(
+    "Cover & contents",
+  );
+  expect(
+    await page.evaluate(() => [
+      localStorage.getItem("wj:guide:page"),
+      localStorage.getItem("wj:guide:bookmark"),
+      localStorage.getItem("wj:handbook:bookmark"),
+      JSON.parse(localStorage.getItem("wj:test:settings")).rank,
+      JSON.parse(localStorage.getItem("wj:throws:checks:rokyu")).length,
+    ]),
+  ).toEqual([null, null, "34", "gokyu", 1]);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.locator("#study-section-title")).toHaveText(
+    "Cover & contents",
+  );
+});
+
+test("Throw Guide reset clears every rank checklist and filters but preserves other tasks", async ({
+  page,
+}) => {
+  await seedResetState(page, {
+    "study:section": "gokyu",
+    "handbook:bookmark": 34,
+    "test:settings": { rank: "sankyu" },
+    "throws:state": {
+      mode: "practice",
+      group: "nikyo",
+      rank: "gokyu",
+      practiceRank: "rokyu",
+      selected: "osotogari",
+    },
+    "throws:checks:rokyu": ["O Soto Gari - Major Outside Reap"],
+    "throws:checks:gokyu": ["Koshi Guruma - Hip Wheel - Headlock Hip Throw"],
+  });
+  await page.getByRole("button", { name: /Throw Guide/ }).click();
+  await expect(page.locator("#practice-progress")).toHaveText(
+    "1 / 6 practiced",
+  );
+  await page.getByRole("button", { name: "Reset Throw Guide" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reset Throw Guide?" });
+  await expect(dialog).toContainText("all rank practice checks");
+  await dialog.press("Escape");
+  await expect(page.locator("#practice-progress")).toHaveText(
+    "1 / 6 practiced",
+  );
+  await confirmReset(page, "Throw Guide");
+  await expect(
+    page.getByRole("tab", { name: "Catalog", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(page.locator("#throw-results button")).toHaveCount(68);
+  expect(
+    await page.evaluate(() => [
+      localStorage.getItem("wj:throws:checks:rokyu"),
+      localStorage.getItem("wj:throws:checks:gokyu"),
+      JSON.parse(localStorage.getItem("wj:study:section")),
+      JSON.parse(localStorage.getItem("wj:test:settings")).rank,
+      localStorage.getItem("wj:handbook:bookmark"),
+    ]),
+  ).toEqual([null, null, "gokyu", "sankyu", "34"]);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /Throw Guide/ }).click();
+  await expect(
+    page.getByRole("tab", { name: "Catalog", exact: true }),
+  ).toHaveAttribute("aria-selected", "true");
+  await page.getByRole("tab", { name: "Rank practice" }).click();
+  await expect(page.locator("#practice-progress")).toHaveText(
+    "0 / 6 practiced",
+  );
+  await page
+    .getByRole("button", { name: "View handbook", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Reset Student Handbook" }),
+  ).toBeHidden();
+});
+
+test("Practice Test reset discards the attempt and settings without affecting other tasks", async ({
+  page,
+}) => {
+  await seedResetState(page, {
+    "study:section": "rokyu",
+    "handbook:bookmark": 34,
+    "throws:checks:rokyu": ["O Soto Gari - Major Outside Reap"],
+    "test:missed": ["rokyu:vocabulary:7:0:0"],
+    "cards:state": { rank: "gokyu", direction: "japanese" },
+    "test:settings": {
+      rank: "gokyu",
+      categories: ["general"],
+      count: "10",
+      format: "written",
+    },
+    "test:session": {
+      config: {
+        rank: "rokyu",
+        categories: ["general"],
+        count: "all",
+        format: "written",
+      },
+      questionIds: ["rokyu:general:8:0:0"],
+      answers: {
+        "rokyu:general:8:0:0": {
+          text: "My draft",
+          revealed: false,
+          rating: null,
+        },
+      },
+      index: 0,
+      stage: "active",
+    },
+  });
+  await page.getByRole("button", { name: /Practice Test Vocabulary/ }).click();
+  if (test.info().project.name === "mobile")
+    await page.setViewportSize({ width: 320, height: 900 });
+  await expect(page.getByRole("textbox", { name: "Your answer" })).toHaveValue(
+    "My draft",
+  );
+  await page.getByRole("button", { name: "Reset Practice Test" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reset Practice Test?" });
+  await expect(dialog).toContainText(
+    "current test, answers, results, and saved test settings",
+  );
+  await expect(dialog).toContainText("missed-question history");
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  const bounds = await dialog.boundingBox();
+  expect(bounds.x).toBeGreaterThanOrEqual(0);
+  expect(bounds.x + bounds.width).toBeLessThanOrEqual(
+    page.viewportSize().width,
+  );
+  await page.screenshot({
+    path: `test-results/${test.info().project.name}-reset-dialog.png`,
+    fullPage: false,
+  });
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByRole("textbox", { name: "Your answer" })).toHaveValue(
+    "My draft",
+  );
+  await confirmReset(page, "Practice Test");
+  await expect(page.locator("#test-setup")).toBeVisible();
+  await expect(page.getByRole("combobox", { name: "Target rank" })).toHaveValue(
+    "",
+  );
+  await expect(
+    page.getByRole("combobox", { name: "Question count" }),
+  ).toHaveValue("all");
+  await expect(
+    page.getByRole("combobox", { name: "Answer format" }),
+  ).toHaveValue("mixed");
+  expect(
+    await page.evaluate(() => [
+      localStorage.getItem("wj:test:session"),
+      localStorage.getItem("wj:test:settings"),
+      localStorage.getItem("wj:test:missed"),
+      JSON.parse(localStorage.getItem("wj:cards:state")).rank,
+      JSON.parse(localStorage.getItem("wj:study:section")),
+      JSON.parse(localStorage.getItem("wj:throws:checks:rokyu")).length,
+      localStorage.getItem("wj:handbook:bookmark"),
+    ]),
+  ).toEqual([null, null, null, "gokyu", "rokyu", 1, "34"]);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await page.screenshot({
+    path: `test-results/${test.info().project.name}-reset.png`,
+    fullPage: true,
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /Practice Test Vocabulary/ }).click();
+  await expect(page.locator("#test-setup")).toBeVisible();
+});
+
+test("reset reports storage failure instead of claiming success", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("wj:study:section", JSON.stringify("rokyu"));
+    Storage.prototype.removeItem = function () {
+      throw new Error("Storage unavailable");
+    };
+  });
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Reset Study Guide" }).click();
+  await page
+    .getByRole("dialog", { name: "Reset Study Guide?" })
+    .getByRole("button", { name: "Reset", exact: true })
+    .click();
+  await expect(page.locator("#reset-status")).toHaveText(
+    "Unable to clear saved data. Please try again.",
+  );
+  await expect(page.locator("#study-section-title")).toHaveText("Rokyu");
+});
+
 test("iOS home-screen icon and name resolve under the GitHub Pages path", async ({
   page,
 }) => {

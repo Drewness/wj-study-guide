@@ -15,6 +15,9 @@ import {
   Download,
   FileWarning,
   ClipboardCheck,
+  RotateCcw,
+  Layers,
+  Printer,
 } from "lucide";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import guideUrl from "../docs/WJ-Student-Guide.pdf?url";
@@ -22,6 +25,7 @@ import handbookUrl from "../docs/WJtudent-handbook112026.pdf?url";
 import { createStudyGuide } from "./study-guide.js";
 import { createThrowGuide } from "./throw-guide.js";
 import { createPracticeTest } from "./practice-test.js";
+import { createFlashcards } from "./flashcards.js";
 import "./style.css";
 
 createIcons({
@@ -41,6 +45,9 @@ createIcons({
     Download,
     FileWarning,
     ClipboardCheck,
+    RotateCcw,
+    Layers,
+    Printer,
   },
 });
 
@@ -94,6 +101,14 @@ const storage = {
       localStorage.setItem(`wj:${key}`, JSON.stringify(value));
     } catch {}
   },
+  remove(key) {
+    try {
+      localStorage.removeItem(`wj:${key}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
 };
 const documents = new Map();
 const studyGuide = createStudyGuide({
@@ -116,6 +131,7 @@ const practiceTest = createPracticeTest({
   sourceUrl: guideUrl,
   storage,
 });
+const flashcards = createFlashcards({ container: element("flashcards"), chapters: element("chapters"), sourceUrl: guideUrl, storage });
 let currentBook = "guide";
 let currentWorkspace = "study";
 let pageNumber = 1;
@@ -299,6 +315,7 @@ function updateWorkspace(mode) {
       "Vocabulary & general information",
       "TEST COVERAGE",
     ],
+    cards: ["Flashcards", "Vocabulary practice", "FLASHCARD RANKS"],
   };
   const [title, description, contents] = titles[mode];
   element("task-title").innerHTML = `${title}<span>.</span>`;
@@ -308,6 +325,12 @@ function updateWorkspace(mode) {
   element("study-guide").hidden = mode !== "study";
   element("throw-guide").hidden = mode !== "throw";
   element("practice-test").hidden = mode !== "test";
+  element("flashcards").hidden = mode !== "cards";
+  element("reset-task").hidden = mode === "reference";
+  element("print-cards").hidden = mode !== "cards";
+  element("reset-task").setAttribute("aria-label", `Reset ${title}`);
+  element("reset-task").title = `Reset ${title}`;
+  element("reset-status").textContent = "";
   element("chapters").setAttribute(
     "aria-label",
     mode === "test" ? "Practice test coverage" : "Document sections",
@@ -346,6 +369,17 @@ function openPracticeTest() {
   element("open-original").href = guideUrl;
   updateWorkspace("test");
   practiceTest.show();
+}
+
+function openFlashcards() {
+  ++loadVersion;
+  ++renderVersion;
+  renderTask?.cancel();
+  textTask?.cancel();
+  pdf = undefined;
+  element("open-original").href = guideUrl;
+  updateWorkspace("cards");
+  flashcards.show();
 }
 
 async function openBook(key) {
@@ -407,11 +441,60 @@ async function openBook(key) {
   }
 }
 
+const resetTasks = {
+  study: {
+    title: "Study Guide",
+    description:
+      "Return to the cover and clear the saved reading position and old guide bookmark.",
+    reset: () => studyGuide.reset(),
+  },
+  throw: {
+    title: "Throw Guide",
+    description:
+      "Clear all rank practice checks and return the catalog, filters, and selected technique to their defaults.",
+    reset: () => throwGuide.reset(),
+  },
+  test: {
+    title: "Practice Test",
+    description:
+      "Discard the current test, answers, results, and saved test settings. This also clears missed-question history.",
+    reset: () => practiceTest.reset(),
+  },
+  cards: { title: "Flashcards", description: "Return flashcards to Rokyu and clear the saved direction, order, and position.", reset: () => flashcards.reset() },
+};
+element("print-cards").addEventListener("click", () => {
+  if (currentWorkspace === "cards") flashcards.print();
+});
+
+let resetMode;
+element("reset-task").addEventListener("click", () => {
+  resetMode = currentWorkspace;
+  const task = resetTasks[resetMode];
+  if (!task) return;
+  element("reset-dialog-title").textContent = `Reset ${task.title}?`;
+  element("reset-dialog-description").textContent = task.description;
+  element("reset-status").textContent = "";
+  element("reset-dialog").returnValue = "";
+  element("reset-dialog").showModal();
+});
+element("reset-dialog").addEventListener("close", () => {
+  if (
+    element("reset-dialog").returnValue !== "confirm" ||
+    resetMode !== currentWorkspace
+  )
+    return;
+  const task = resetTasks[resetMode];
+  element("reset-status").textContent = task.reset()
+    ? `${task.title} reset.`
+    : "Unable to clear saved data. Please try again.";
+});
+
 document.querySelectorAll("[data-task]").forEach((button) =>
   button.addEventListener("click", () => {
     if (button.dataset.task === "study") void openBook("guide");
     else if (button.dataset.task === "throw") openThrows();
-    else openPracticeTest();
+    else if (button.dataset.task === "test") openPracticeTest();
+    else openFlashcards();
   }),
 );
 document

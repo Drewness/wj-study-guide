@@ -8,6 +8,8 @@ import {
   checkPracticeAnswer,
   getChoiceExplanation,
 } from "../src/practice-test-content.js";
+import { getMissedQuestions, sanitizeMissed, updateMissed } from "../src/review-history.js";
+import { getFlashcards, getPronunciation, shuffleFlashcards } from "../src/flashcards-content.js";
 import {
   createQuestionChoices,
   createChoiceSets,
@@ -69,6 +71,188 @@ async function seedQuestions(
   await page.goto("./", { waitUntil: "domcontentloaded" });
   await openTest(page);
 }
+
+test("flashcards retain cumulative vocabulary, correct language direction, and shuffle membership", () => {
+  const counts = [30, 58, 84, 116, 136, 166];
+  for (const [index, rank] of testRanks.entries()) {
+    const cards = getFlashcards(rank.id);
+    expect(cards).toHaveLength(counts[index]);
+    expect(new Set(cards.map((card) => card.id)).size).toBe(cards.length);
+    expect(new Set(shuffleFlashcards(cards, () => 0).map((card) => card.id))).toEqual(new Set(cards.map((card) => card.id)));
+    expect(cards.every((card) => card.english && card.japanese)).toBeTruthy();
+  }
+  const cards = getFlashcards("sankyu");
+  expect(cards.find((card) => card.english === "Left").japanese).toBe("Hidari");
+  expect(cards.find((card) => card.english === "Right").japanese).toBe("Migi");
+  expect(cards.find((card) => card.japanese === "Shintai").english).toBe("Body movement/locomotion");
+  expect(cards.find((card) => card.japanese === "Debana").english).toBe("The instant an opportunity for attack appears");
+  expect(getPronunciation("Hajime")).toBe("HA-JEE-MEH");
+  expect(getPronunciation("Dojo")).toBe("DOH-JOH");
+  expect(getPronunciation("Tsugi Ashi")).toBe("SOO-GEE AH-SHEE");
+  expect(getPronunciation("Ayumi Ashi")).toBe("AH-YOO-MEE AH-SHEE");
+  const excluded = new Set(["Body movement/locomotion", "The instant an opportunity for attack appears"]);
+  const japaneseAnswers = new Set(testQuestionBank.filter((question) => question.category === "vocabulary").map((question) => question.answer));
+  for (const answer of japaneseAnswers) {
+    if (!excluded.has(answer)) expect(getPronunciation(answer)).not.toBe("");
+  }
+});
+
+test("flashcards support rank, both directions, flipping, shuffle, and saved position", async ({ page }) => {
+  await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ contentType: "text/css", body: "" }));
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  await expect(page.getByRole("region", { name: "Vocabulary flashcards" })).toBeVisible();
+  await expect(page.locator("#cards-position")).toHaveText("1 / 30");
+  await expect(page.locator("#cards-text")).toHaveText("Kyotsuke");
+  await expect(page.locator("#cards-language")).toHaveText("JAPANESE");
+  await expect(page.locator("#cards-source")).toBeHidden();
+  await expect(page.locator("#cards-answer-pronunciation")).toBeHidden();
+  await page.getByRole("button", { name: "Kyotsuke. Show answer" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#cards-face")).toHaveClass(/flipped/);
+  await expect(page.locator("#cards-answer")).toHaveText("Attention");
+  await expect(page.locator("#cards-answer-japanese")).toHaveText("Kyotsuke");
+  await expect(page.locator("#cards-answer-pronunciation")).toBeVisible();
+  await expect(page.locator("#cards-source")).toHaveAttribute("href", /#page=7$/);
+  await page.getByRole("button", { name: "English to Japanese" }).click();
+  await expect(page.locator("#cards-text")).toHaveText("Attention");
+  await page.locator("#cards-face").click();
+  await expect(page.locator("#cards-answer")).toHaveText("Kyotsuke");
+  await expect(page.locator("#cards-answer-pronunciation")).toBeVisible();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.locator("#cards-position")).toHaveText("2 / 30");
+  await expect(page.locator("#cards-text")).toHaveText("Bow");
+  await page.getByRole("button", { name: "Previous", exact: true }).click();
+  await expect(page.locator("#cards-position")).toHaveText("1 / 30");
+  await page.getByRole("combobox", { name: "Target rank" }).selectOption("gokyu");
+  await expect(page.locator("#cards-position")).toHaveText("1 / 58");
+  await page.getByRole("button", { name: "Shuffle", exact: true }).click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("wj:cards:state")));
+  expect(new Set(saved.order).size).toBe(58);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  const text = await page.locator("#cards-text").textContent();
+  await page.getByRole("button", { name: "Study Guide Ranks & requirements" }).click();
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  await expect(page.locator("#cards-text")).toHaveText(text);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  await expect(page.locator("#cards-position")).toHaveText("2 / 58");
+  await expect(page.locator("#cards-text")).toHaveText(text);
+  await expect(page.getByRole("button", { name: "English to Japanese" })).toHaveAttribute("aria-pressed", "true");
+  for (const width of [320, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.waitForTimeout(50);
+    expect(await page.evaluate(() => {
+      const app = document.querySelector(".app-layout")?.getBoundingClientRect();
+      return Boolean(app && app.left >= -0.5 && app.right <= innerWidth + 0.5);
+    })).toBeTruthy();
+    await page.screenshot({ path: `test-results/${test.info().project.name}-flashcards-${width}.png`, fullPage: true });
+  }
+});
+
+test("flashcards swipe left for next and right for previous without flipping", async ({ page }) => {
+  await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ contentType: "text/css", body: "" }));
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  const face = page.locator("#cards-face");
+  await face.dispatchEvent("pointerdown", { pointerType: "touch", clientX: 280, clientY: 300 });
+  await face.dispatchEvent("pointerup", { pointerType: "touch", clientX: 180, clientY: 302 });
+  await expect(page.locator("#cards-position")).toHaveText("2 / 30");
+  await expect(face).not.toHaveClass(/flipped/);
+  await face.dispatchEvent("pointerdown", { pointerType: "touch", clientX: 180, clientY: 300 });
+  await face.dispatchEvent("pointerup", { pointerType: "touch", clientX: 280, clientY: 302 });
+  await expect(page.locator("#cards-position")).toHaveText("1 / 30");
+  await expect(face).not.toHaveClass(/flipped/);
+});
+
+test("flashcards print a mirrored Japanese-front and English-back duplex layout", async ({ page }) => {
+  await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ contentType: "text/css", body: "" }));
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  await page.evaluate(() => { window.print = () => { window.__flashcardsPrinted = true; }; });
+  await expect(page.getByRole("button", { name: "Print flashcards" })).toBeVisible();
+  await page.getByRole("button", { name: "Print flashcards" }).click();
+  expect(await page.evaluate(() => window.__flashcardsPrinted)).toBeTruthy();
+  await expect(page.locator(".print-sheet")).toHaveCount(8);
+  await expect(page.locator(".print-front")).toHaveCount(4);
+  await expect(page.locator(".print-back")).toHaveCount(4);
+  await expect(page.locator(".print-front").first().locator(".print-card:not(.print-card-spacer)")).toHaveCount(8);
+  await expect(page.locator(".print-back").first().locator(".print-card-language").first()).toHaveText("ENGLISH");
+  await expect(page.locator(".print-front").first().locator(".print-card-pronunciation")).toHaveCount(0);
+  await expect(page.locator(".print-back").first().locator(".print-card-pronunciation").first()).toBeAttached();
+  await expect(page.locator(".print-back").first().locator(".print-card-japanese").first()).not.toBeEmpty();
+  await expect(page.locator(".print-back").first().locator(".print-card-rank").first()).toContainText("Rank:");
+});
+
+test("flashcard reset is confirmed and preserves missed-question history", async ({ page }) => {
+  await page.route("https://fonts.googleapis.com/**", (route) => route.fulfill({ contentType: "text/css", body: "" }));
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  const missed = testQuestionBank.find((question) => question.answer === "Kyotsuke").id;
+  await page.evaluate((id) => localStorage.setItem("wj:test:missed", JSON.stringify([id])), missed);
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  await page.getByRole("combobox", { name: "Target rank" }).selectOption("sankyu");
+  await page.getByRole("button", { name: "Reset Flashcards" }).click();
+  const dialog = page.getByRole("dialog", { name: "Reset Flashcards?" });
+  await expect(dialog).toContainText("saved direction, order, and position");
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.locator("#cards-position")).toHaveText("1 / 116");
+  await page.getByRole("button", { name: "Reset Flashcards" }).click();
+  await dialog.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(page.locator("#cards-position")).toHaveText("1 / 30");
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wj:test:missed")))).toEqual([missed]);
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: "Flashcards Vocabulary practice" }).click();
+  await expect(page.locator("#cards-position")).toHaveText("1 / 30");
+});
+
+test("missed history ignores unknown and open questions and respects rank/category boundaries", () => {
+  const low = testQuestionBank.find((question) => question.answer === "Kyotsuke");
+  const high = testQuestionBank.find((question) => question.rank === "sankyu" && question.category === "general" && question.hasAnswer);
+  const open = testQuestionBank.find((question) => !question.hasAnswer);
+  let history = updateMissed([], low.id, "review");
+  history = updateMissed(history, high.id, "review");
+  expect(sanitizeMissed([low.id, low.id, "missing", null])).toEqual([low.id]);
+  expect(getMissedQuestions(history, "gokyu").map((question) => question.id)).toEqual([low.id]);
+  expect(getMissedQuestions(history, "sankyu", ["general"]).map((question) => question.id)).toEqual([high.id]);
+  expect(updateMissed(history, open.id, "review")).toEqual(history);
+  expect(updateMissed(history, low.id, "correct")).toEqual([high.id]);
+});
+
+test("missed questions persist across attempts and leave review after a correct answer", async ({ page }) => {
+  const vocabulary = testQuestionBank.find((question) => question.answer === "Kyotsuke");
+  await seedQuestions(page, [vocabulary.id]);
+  await page.getByRole("textbox", { name: "Your answer" }).fill("wrong");
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wj:test:missed")))).toEqual([vocabulary.id]);
+  await page.getByRole("button", { name: "View results", exact: true }).click();
+  await page.getByRole("button", { name: "New test", exact: true }).click();
+  await page.getByRole("combobox", { name: "Target rank" }).selectOption("gokyu");
+  await expect(page.locator("#test-review-count")).toHaveText("1 missed question available");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(page.locator("#test-review-count")).toHaveText("1 missed question available");
+  await page.getByRole("button", { name: "Review missed questions" }).click();
+  await expect(page.locator("#test-position")).toHaveText("Question 1 of 1");
+  await expect(page.locator("#test-question-prompt")).toHaveText(vocabulary.prompt);
+  const radio = page.getByRole("radio", { name: vocabulary.answer, exact: true });
+  await radio.check();
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wj:test:missed")))).toEqual([]);
+  await page.getByRole("button", { name: "View results", exact: true }).click();
+  await page.getByRole("button", { name: "New test", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Review missed questions" })).toBeDisabled();
+});
+
+test("manual rating changes update missed history without including unassessed questions", async ({ page }) => {
+  const question = testQuestionBank.find((entry) => entry.answer === "Kyotsuke");
+  await seedQuestions(page, [question.id]);
+  await page.getByRole("textbox", { name: "Your answer" }).fill("wrong");
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  await page.getByRole("button", { name: "Got it", exact: true }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wj:test:missed")))).toEqual([]);
+  await page.getByRole("button", { name: "Needs review", exact: true }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("wj:test:missed")))).toEqual([question.id]);
+});
 
 test("incorrect selections show source-backed explanations and an honest fallback", async ({
   page,
