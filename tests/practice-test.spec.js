@@ -176,6 +176,9 @@ test("flashcards print a mirrored Japanese-front and English-back duplex layout"
   await expect(page.locator(".print-sheet")).toHaveCount(8);
   await expect(page.locator(".print-front")).toHaveCount(4);
   await expect(page.locator(".print-back")).toHaveCount(4);
+  await expect(page.locator(".print-sheet").nth(0)).toHaveClass(/print-front/);
+  await expect(page.locator(".print-sheet").nth(1)).toHaveClass(/print-back/);
+  await expect(page.locator(".print-sheet").nth(2)).toHaveClass(/print-front/);
   await expect(page.locator(".print-front").first().locator(".print-card:not(.print-card-spacer)")).toHaveCount(8);
   await expect(page.locator(".print-back").first().locator(".print-card-language").first()).toHaveText("ENGLISH");
   await expect(page.locator(".print-front").first().locator(".print-card-pronunciation")).toHaveCount(0);

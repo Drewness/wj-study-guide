@@ -187,8 +187,8 @@ export function createFlashcards({ container, chapters, sourceUrl, storage }) {
     }
 
     printRoot.replaceChildren();
-    for (const chunk of chunks) addPage("front", chunk);
     for (const chunk of chunks) {
+      addPage("front", chunk);
       const mirrored = [];
       for (let row = 0; row < chunk.length; row += 2) mirrored.push(chunk[row + 1] ?? null, chunk[row] ?? null);
       addPage("back", mirrored);
