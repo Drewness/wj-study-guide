@@ -77,6 +77,8 @@ export function getChoiceExplanation(choice, currentQuestionId) {
   if (vocabulary)
     return {
       text: `The guide defines this as: ${vocabulary.prompt.replace("Complete the vocabulary pair: ", "")}.`,
+      prefix: "The guide defines this as: ",
+      value: vocabulary.prompt.replace("Complete the vocabulary pair: ", ""),
       page: vocabulary.page,
     };
   const english = testQuestionBank.find(
@@ -90,6 +92,8 @@ export function getChoiceExplanation(choice, currentQuestionId) {
   if (english)
     return {
       text: `The guide pairs this with: ${english.answer}.`,
+      prefix: "The guide pairs this with: ",
+      value: english.answer,
       page: english.page,
     };
   const related = testQuestionBank.find(

@@ -456,13 +456,13 @@ export function createPracticeTest({
       const position = choiceFeedback(question, answer, choice, true)?.text;
       if (getMultiSelectDefinition(question)?.ordered)
         item.append(node("p", position));
-      item.append(
-        node(
-          "p",
-          explanation?.text ??
-            "No explanation for this selection is available in the study guide.",
-        ),
-      );
+      const description = node("p");
+      if (explanation?.value) {
+        description.append(document.createTextNode(explanation.prefix), node("strong", explanation.value), document.createTextNode("."));
+      } else {
+        description.textContent = explanation?.text ?? "No explanation for this selection is available in the study guide.";
+      }
+      item.append(description);
       if (explanation) {
         const link = node(
           "a",

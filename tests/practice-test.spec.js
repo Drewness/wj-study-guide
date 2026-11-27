@@ -86,6 +86,13 @@ test("incorrect selections show source-backed explanations and an honest fallbac
   });
   expect(getChoiceExplanation("Uwagi", uniform.id)).toEqual({
     text: "The guide defines this as: Judo Uniform Jacket.",
+    prefix: "The guide defines this as: ",
+    value: "Judo Uniform Jacket",
+    page: 13,
+  });
+  const randori = testQuestionBank.find((question) => question.answer === "Randori");
+  expect(getChoiceExplanation("Shumatsu Undo", randori.id)).toMatchObject({
+    value: "Cool-down Exercises in Judo",
     page: 13,
   });
   expect(getChoiceExplanation("1984", year.id)).toBeNull();
@@ -168,6 +175,10 @@ test("incorrect selections show source-backed explanations and an honest fallbac
     .getByRole("button", { name: "Next question", exact: true })
     .click();
   await expect(box).toContainText("Judo Uniform Jacket");
+  await expect(box.locator("p strong")).toHaveText("Judo Uniform Jacket");
+  await expect(box.locator("p strong")).toHaveCSS("font-weight", "700");
+  await expect(box.locator("p").first()).toHaveCSS("font-weight", "400");
+  await page.screenshot({ path: `test-results/${test.info().project.name}-bold-definition.png`, fullPage: true });
   await expect(
     box.getByRole("link", { name: "Student Guide - PDF page 13" }),
   ).toBeVisible();
