@@ -136,6 +136,10 @@ test("incorrect selections show source-backed explanations and an honest fallbac
     .click();
   const box = page.getByRole("region", { name: "About your selection" });
   await expect(box).toBeVisible();
+  await expect(page.locator("#test-answer")).toHaveCSS("font-weight", "700");
+  await expect(box).toHaveCSS("background-color", "rgb(255, 247, 223)");
+  await expect(box).toHaveCSS("border-left-color", "rgb(174, 122, 22)");
+  await expect(page.locator("#test-answer-panel")).toHaveCSS("background-color", "rgb(237, 242, 248)");
   await expect(
     box.getByRole("heading", { name: "Yoshitsugu Yamishita" }),
   ).toBeVisible();
