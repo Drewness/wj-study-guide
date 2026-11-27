@@ -2023,6 +2023,14 @@ select {
   font-size: 10px;
   font-weight: 600;
 }
+.test-selection-order {
+  display: block;
+  margin-top: 16px;
+  color: #385373;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
 .test-choices .test-choice[data-result="correct"] {
   color: #166534;
   border-color: #24824b;

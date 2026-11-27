@@ -7,6 +7,26 @@ const medalists = [
 ];
 
 const definitions = {
+  "rokyu:general:8:0:6": {
+    separator: ", ",
+    ordered: true,
+    stripNumber: true,
+    unit: "numbers",
+    distractors: [],
+  },
+  "ikkyu:general:18:1:1": {
+    separator: ", ",
+    ordered: true,
+    stripNumber: true,
+    unit: "numbers",
+    distractors: [],
+  },
+  "sankyu:general:14:1:4": {
+    separator: "; ",
+    ordered: true,
+    unit: "ranks",
+    distractors: [],
+  },
   "rokyu:general:8:0:5": {
     separator: "; ",
     distractors: [
@@ -139,6 +159,8 @@ export function getMultiSelectDefinition(question) {
       .filter(Boolean);
   if (definition.numbered)
     answers = answers.map((part) => part.replace(/^[1-4]\.\s*/, ""));
+  if (definition.stripNumber)
+    answers = answers.map((part) => part.replace(/\(\d{1,2}\)$/, "").trimEnd());
   return {
     ...definition,
     answers,

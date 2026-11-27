@@ -173,7 +173,19 @@ export function gradeMultiSelect(question, selected = []) {
     Boolean(definition) &&
     selected.length === definition.count &&
     new Set(selected).size === definition.count &&
-    selected.every((name) => correct.includes(name));
+    selected.every((name, index) =>
+      definition.ordered ? name === correct[index] : correct.includes(name),
+    );
+  if (definition?.ordered)
+    return matches
+      ? {
+          rating: "correct",
+          message: "Correct - you selected every item in order.",
+        }
+      : {
+          rating: "review",
+          message: "Incorrect - select every item in the requested order.",
+        };
   const count =
     ["zero", "one", "two", "three", "four", "five"][definition?.count] ??
     String(definition?.count);
@@ -277,7 +289,9 @@ export function validQuestionChoices(question, choices) {
   if (multiple.length) {
     if (
       !Array.isArray(choices) ||
-      choices.length !== multiple.length + 3 ||
+      choices.length !==
+        multiple.length +
+          Math.min(3, getMultiSelectDefinition(question).distractors.length) ||
       new Set(choices).size !== choices.length
     )
       return false;

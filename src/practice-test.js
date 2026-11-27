@@ -69,6 +69,12 @@ function renderQuestionPrompt(prompt, question) {
   );
 }
 
+function choiceLegend(definition, ordered) {
+  if (!definition || definition.answers.length <= 1) return "Choose one answer";
+  const suffix = ordered ? " in order" : "";
+  return `Select ${definition.count} ${definition.unit}${suffix}`;
+}
+
 function validSettings(value) {
   return {
     rank: testRanks.some((rank) => rank.id === value?.rank) ? value.rank : "",
@@ -110,6 +116,15 @@ function restoreChoiceSets(value, config) {
   );
 }
 
+function regradeCorrectedDirection(id, question, answer) {
+  if (
+    answer.checked &&
+    ["rokyu:vocabulary:7:4:14", "rokyu:vocabulary:7:4:29"].includes(id)
+  ) {
+    answer.rating = checkPracticeAnswer(question, answer.text).rating;
+  }
+}
+
 function restoreSession(value) {
   const config = validSettings(value?.config);
   if (
@@ -136,9 +151,8 @@ function restoreSession(value) {
     const saved = value.answers?.[id];
     if (!saved) continue;
     const revealed = saved.revealed === true;
-    const allowed = questionById.get(id).hasAnswer
-      ? ["correct", "review"]
-      : ["reviewed"];
+    const question = questionById.get(id);
+    const allowed = question.hasAnswer ? ["correct", "review"] : ["reviewed"];
     answers[id] = {
       text: typeof saved.text === "string" ? saved.text.slice(0, 4000) : "",
       selected: restoreSelections(saved.selected, choiceSets[id]),
@@ -147,6 +161,7 @@ function restoreSession(value) {
       checked:
         revealed && saved.checked === true && allowed.includes(saved.rating),
     };
+    regradeCorrectedDirection(id, question, answers[id]);
   }
   const index = Number.isInteger(value.index)
     ? Math.min(value.questionIds.length - 1, Math.max(0, value.index))
@@ -197,6 +212,24 @@ function checkedAnswer(question, answer, choices) {
 function choiceFeedback(question, answer, choice, selected) {
   if (!answer.revealed) return null;
   const correct = getMultiSelectAnswers(question);
+  if (getMultiSelectDefinition(question)?.ordered) {
+    const position = correct.indexOf(choice) + 1;
+    const selectedPosition = (answer.selected ?? []).indexOf(choice) + 1;
+    if (!selected)
+      return {
+        result: "",
+        text: `Not selected - correct position ${position}`,
+      };
+    return selectedPosition === position
+      ? {
+          result: "correct",
+          text: `Selected ${selectedPosition} - correct position`,
+        }
+      : {
+          result: "review",
+          text: `Selected ${selectedPosition} - correct position ${position}`,
+        };
+  }
   const matches = correct.length
     ? correct.includes(choice)
     : choice === question.answer;
@@ -235,6 +268,7 @@ export function createPracticeTest({
       <h2 id="test-question-prompt" class="test-question-prompt"></h2>
       <div id="test-written-response"><label class="test-response-label" for="test-response">Your answer</label><textarea id="test-response" rows="4" maxlength="4000" spellcheck="false" aria-describedby="test-feedback"></textarea></div>
       <fieldset id="test-choices" class="test-choices" aria-describedby="test-feedback" hidden><legend>Choose one answer</legend></fieldset>
+      <output id="test-selection-order" class="test-selection-order" aria-live="polite" hidden></output>
       <button id="test-reveal" class="outline-button"><i data-lucide="eye"></i>Reveal answer</button>
       <output id="test-feedback" class="test-feedback"></output>
       <section id="test-answer-panel" class="test-answer-panel" aria-label="Answer review" hidden><h3 id="test-answer-title">Guide answer</h3><p id="test-answer"></p><p id="test-source-note" class="source-note" hidden></p><a id="test-source" class="source-link" target="_blank" rel="noopener"></a><div id="test-references"></div>
@@ -323,23 +357,27 @@ export function createPracticeTest({
     renderCoverage();
   }
 
+  function updateSelectionOrder(ordered, selected) {
+    const output = find("test-selection-order");
+    output.hidden = !ordered;
+    const labels = selected.map((item, index) => `${index + 1}. ${item}`);
+    output.textContent = ordered
+      ? `Selected order: ${labels.join("; ") || "None"}`
+      : "";
+  }
+
   function renderAnswerInput(question, answer) {
     const choices = session.choiceSets?.[question.id];
     const correct = getMultiSelectAnswers(question);
     const definition = getMultiSelectDefinition(question);
     const multiple = correct.length > 1;
+    const ordered = Boolean(choices && definition?.ordered);
     const fieldset = find("test-choices");
     fieldset.hidden = !choices;
     fieldset.removeAttribute("aria-invalid");
     find("test-written-response").hidden = Boolean(choices);
-    fieldset.replaceChildren(
-      node(
-        "legend",
-        multiple
-          ? `Select ${definition.count} ${definition.unit}`
-          : "Choose one answer",
-      ),
-    );
+    fieldset.replaceChildren(node("legend", choiceLegend(definition, ordered)));
+    updateSelectionOrder(ordered, answer.selected ?? []);
     for (const [index, choice] of (choices ?? []).entries()) {
       const selected = multiple
         ? (answer.selected ?? []).includes(choice)
@@ -360,6 +398,8 @@ export function createPracticeTest({
       if (feedback) {
         label.dataset.result = feedback.result;
         status.textContent = feedback.text;
+      } else if (ordered && selected) {
+        status.textContent = `Selected ${(answer.selected ?? []).indexOf(choice) + 1}`;
       }
       body.append(node("span", choice), status);
       label.append(
@@ -368,13 +408,26 @@ export function createPracticeTest({
         body,
       );
       input.addEventListener("change", () => {
-        answer.selected = [...fieldset.querySelectorAll("input:checked")].map(
-          (control) => control.value,
-        );
+        if (ordered) {
+          const previous = answer.selected ?? [];
+          answer.selected = input.checked
+            ? [...previous, choice]
+            : previous.filter((item) => item !== choice);
+        } else {
+          answer.selected = [...fieldset.querySelectorAll("input:checked")].map(
+            (control) => control.value,
+          );
+        }
         answer.text = multiple ? answer.selected.join("\n") : choice;
         fieldset.removeAttribute("aria-invalid");
         find("test-feedback").textContent = "";
         persist();
+        if (ordered) {
+          renderAnswerInput(question, answer);
+          [...fieldset.querySelectorAll("input")]
+            .find((control) => control.value === choice)
+            ?.focus();
+        }
       });
       fieldset.append(label);
     }

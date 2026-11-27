@@ -27,12 +27,13 @@ async function seedQuestions(
   ids,
   rank = "rokyu",
   multipleChoice = false,
+  format = "mixed",
 ) {
   await page.route("https://fonts.googleapis.com/**", (route) =>
     route.fulfill({ contentType: "text/css", body: "" }),
   );
   await page.addInitScript(
-    ({ questionIds, target, choiceSets }) => {
+    ({ questionIds, target, choiceSets, answerFormat }) => {
       if (!localStorage.getItem("wj:test:session"))
         localStorage.setItem(
           "wj:test:session",
@@ -41,6 +42,7 @@ async function seedQuestions(
               rank: target,
               categories: ["vocabulary", "general"],
               count: "all",
+              format: answerFormat,
             },
             questionIds,
             choiceSets,
@@ -53,6 +55,7 @@ async function seedQuestions(
     {
       questionIds: ids,
       target: rank,
+      answerFormat: format,
       choiceSets: multipleChoice
         ? createChoiceSets(
             ids.map((id) =>
@@ -221,16 +224,209 @@ test("Four Heavenly Lords checkboxes require exactly all source names without ex
   await expect(page.locator("#test-score")).toHaveText("100%");
 });
 
-test("unordered list definitions cover source lists while ordered and personal responses stay written", () => {
+test("ordered rank and number questions retain selection order, grade it, and support retry", async ({
+  page,
+}) => {
+  const expected = [
+    [
+      "rokyu:general:8:0:6",
+      [
+        "Ichi",
+        "Ni",
+        "San",
+        "Shi",
+        "Go",
+        "Roku",
+        "Shichi",
+        "Hachi",
+        "Kyu",
+        "Jyu",
+      ],
+    ],
+    [
+      "sankyu:general:14:1:4",
+      [
+        "Ikkyu - 1st Degree Brown",
+        "Nikyu - 2nd Degree Brown",
+        "Sankyu - 3rd Degree Brown",
+        "Yonkyu - Green",
+        "Gokyu - Orange",
+        "Rokyu - Yellow",
+      ],
+    ],
+    [
+      "ikkyu:general:18:1:1",
+      [
+        "Ju Ichi",
+        "Ju Ni",
+        "Ju San",
+        "Ju Shi",
+        "Ju Go",
+        "Ju Roku",
+        "Ju Shichi",
+        "Ju Hachi",
+        "Ju Kyu",
+        "Niju",
+      ],
+    ],
+  ];
+  for (const [id, sequence] of expected) {
+    const question = testQuestionBank.find((item) => item.id === id);
+    expect(getMultiSelectDefinition(question).answers).toEqual(sequence);
+    expect(gradeMultiSelect(question, sequence).rating).toBe("correct");
+    expect(gradeMultiSelect(question, [...sequence].reverse()).rating).toBe(
+      "review",
+    );
+    expect(gradeMultiSelect(question, sequence.slice(1)).rating).toBe("review");
+    expect(
+      gradeMultiSelect(question, [...sequence.slice(0, -1), sequence[0]])
+        .rating,
+    ).toBe("review");
+  }
+  await seedQuestions(
+    page,
+    expected.map(([id]) => id),
+    "ikkyu",
+    true,
+  );
+  if (test.info().project.name === "mobile")
+    await page.setViewportSize({ width: 320, height: 900 });
+  const first = expected[0][1];
+  await expect(
+    page.getByRole("group", { name: "Select 10 numbers in order" }),
+  ).toBeVisible();
+  await expect(page.getByRole("checkbox")).toHaveCount(10);
+  await page.getByRole("checkbox", { name: first[1], exact: true }).check();
+  await page.getByRole("checkbox", { name: first[0], exact: true }).check();
+  await expect(page.locator("#test-selection-order")).toHaveText(
+    "Selected order: 1. Ni; 2. Ichi",
+  );
+  await page.getByRole("checkbox", { name: first[1], exact: true }).uncheck();
+  await expect(page.locator("#test-selection-order")).toHaveText(
+    "Selected order: 1. Ichi",
+  );
+  await page.getByRole("checkbox", { name: first[1], exact: true }).check();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(page.locator("#test-selection-order")).toHaveText(
+    "Selected order: 1. Ichi; 2. Ni",
+  );
+  for (const name of first.slice(2))
+    await page.getByRole("checkbox", { name, exact: true }).check();
+  await page
+    .getByRole("button", { name: "Next question", exact: true })
+    .click();
+  await expect(page.locator("#test-feedback")).toHaveText(
+    "Correct - you selected every item in order.",
+  );
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  const ranks = expected[1][1];
+  await expect(
+    page.getByRole("group", { name: "Select 6 ranks in order" }),
+  ).toBeVisible();
+  for (const rank of [...ranks].reverse())
+    await page.getByRole("checkbox", { name: rank, exact: true }).check();
+  await page
+    .getByRole("button", { name: "Next question", exact: true })
+    .click();
+  await expect(page.locator("#test-feedback")).toHaveText(
+    "Incorrect - select every item in the requested order.",
+  );
+  await expect(page.locator('.test-choice[data-result="review"]')).toHaveCount(
+    6,
+  );
+  await expect(page.locator("#test-selection-order")).toContainText(
+    "1. Rokyu - Yellow",
+  );
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  await page.screenshot({
+    path: `test-results/${test.info().project.name}-ordered-practice.png`,
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  for (const name of expected[2][1])
+    await page.getByRole("checkbox", { name, exact: true }).check();
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  await expect(page.locator("#test-feedback")).toHaveText(
+    "Correct - you selected every item in order.",
+  );
+  await page.getByRole("button", { name: "View results", exact: true }).click();
+  await expect(page.locator("#test-score")).toHaveText("67%");
+  await page.getByRole("button", { name: "Retry missed questions" }).click();
+  for (const rank of ranks)
+    await page.getByRole("checkbox", { name: rank, exact: true }).check();
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(page.locator("#test-feedback")).toHaveText(
+    "Correct - you selected every item in order.",
+  );
+  await page.getByRole("button", { name: "View results", exact: true }).click();
+  await expect(page.locator("#test-score")).toHaveText("100%");
+});
+
+test("existing written drafts remain written while untouched ordered questions upgrade", async ({
+  page,
+}) => {
+  const first = "rokyu:general:8:0:6";
+  const second = "sankyu:general:14:1:4";
+  await page.route("https://fonts.googleapis.com/**", (route) =>
+    route.fulfill({ contentType: "text/css", body: "" }),
+  );
+  await page.addInitScript(
+    ({ firstId, secondId }) =>
+      localStorage.setItem(
+        "wj:test:session",
+        JSON.stringify({
+          config: {
+            rank: "sankyu",
+            categories: ["general"],
+            count: "all",
+            format: "mixed",
+          },
+          questionIds: [firstId, secondId],
+          answers: {
+            [firstId]: { text: "Ichi, Ni", revealed: false, rating: null },
+          },
+          index: 0,
+          stage: "active",
+        }),
+      ),
+    { firstId: first, secondId: second },
+  );
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(page.getByRole("textbox", { name: "Your answer" })).toHaveValue(
+    "Ichi, Ni",
+  );
+  await page
+    .getByRole("textbox", { name: "Your answer" })
+    .fill("Ichi, Ni, San, Shi, Go, Roku, Shichi, Hachi, Kyu, Jyu");
+  await page
+    .getByRole("button", { name: "Next question", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(
+    page.getByRole("group", { name: "Select 6 ranks in order" }),
+  ).toBeVisible();
+});
+
+test("list definitions cover source lists while demonstrations and personal responses stay written", () => {
   const lists = testQuestionBank.filter((question) =>
     getMultiSelectDefinition(question),
   );
-  expect(lists).toHaveLength(15);
+  expect(lists).toHaveLength(18);
   for (const question of lists) {
     const definition = getMultiSelectDefinition(question);
     const choices = createQuestionChoices(question);
     expect(validQuestionChoices(question, choices)).toBeTruthy();
-    expect(choices).toHaveLength(definition.answers.length + 3);
+    expect(choices).toHaveLength(
+      definition.answers.length + Math.min(3, definition.distractors.length),
+    );
     expect(
       gradeMultiSelect(question, definition.answers.slice(0, definition.count))
         .rating,
@@ -241,12 +437,15 @@ test("unordered list definitions cover source lists while ordered and personal r
         definition.answers.slice(0, definition.count - 1),
       ).rating,
     ).toBe("review");
-    expect(gradeMultiSelect(question, choices).rating).toBe("review");
+    expect(
+      gradeMultiSelect(
+        question,
+        definition.ordered ? [...definition.answers].reverse() : choices,
+      ).rating,
+    ).toBe("review");
   }
   for (const question of testQuestionBank.filter(
     (entry) =>
-      entry.prompt.includes("ordinal numbers") ||
-      entry.prompt.includes("highest to lowest") ||
       entry.prompt.startsWith("Be able to demonstrate") ||
       entry.prompt === "Tell us about your judo journey.",
   )) {
@@ -449,7 +648,10 @@ test("multiple-choice distractors are related, unique, varied, and never an acce
     if (!choices.length) continue;
     multipleChoice++;
     if (getMultiSelectAnswers(question).length) {
-      expect(choices).toHaveLength(getMultiSelectAnswers(question).length + 3);
+      expect(choices).toHaveLength(
+        getMultiSelectAnswers(question).length +
+          Math.min(3, getMultiSelectDefinition(question).distractors.length),
+      );
       expect(validQuestionChoices(question, choices)).toBeTruthy();
       continue;
     }
@@ -461,7 +663,7 @@ test("multiple-choice distractors are related, unique, varied, and never an acce
       ),
     ).toHaveLength(1);
   }
-  expect(multipleChoice).toBe(186);
+  expect(multipleChoice).toBe(189);
   const obi = testQuestionBank.find((question) => question.answer === "Obi");
   const positions = new Set();
   const distractors = new Set();
@@ -490,7 +692,7 @@ test("multiple-choice distractors are related, unique, varied, and never an acce
   expect(
     createQuestionChoices(
       testQuestionBank.find((question) =>
-        question.prompt.includes("ordinal numbers from one to ten"),
+        question.prompt.startsWith("What is the ultimate goal of Judo"),
       ),
     ),
   ).toEqual([]);
@@ -508,7 +710,7 @@ test("uniform multiple choice persists choices and selection, grades colors, and
     (question) => question.answer === "Obi",
   );
   const written = testQuestionBank.find((question) =>
-    question.prompt.includes("ordinal numbers from one to ten"),
+    question.prompt.startsWith("What is the ultimate goal of Judo"),
   );
   await seedQuestions(page, [uniform.id, written.id], "sankyu", true);
   await expect(page.getByRole("textbox", { name: "Your answer" })).toBeHidden();
@@ -696,7 +898,7 @@ test("rank names in highest-to-lowest order count without belt descriptions", as
   ]) {
     expect(checkPracticeAnswer(question, invalid).rating).toBe("review");
   }
-  await seedQuestions(page, [question.id], "sankyu");
+  await seedQuestions(page, [question.id], "sankyu", false, "written");
   await page.getByRole("textbox", { name: "Your answer" }).fill(response);
   await page.getByRole("button", { name: "Check answer", exact: true }).click();
   await expect(page.locator("#test-active")).toHaveAttribute(
@@ -709,6 +911,111 @@ test("rank names in highest-to-lowest order count without belt descriptions", as
   );
   await page.getByRole("button", { name: "View results", exact: true }).click();
   await expect(page.locator("#test-score")).toHaveText("100%");
+});
+
+test("left and right use the corrected Japanese terms in the guide and practice test", async ({
+  page,
+}) => {
+  const left = testQuestionBank.find(
+    (question) => question.prompt === "Complete the vocabulary pair: Left",
+  );
+  const right = testQuestionBank.find(
+    (question) => question.prompt === "Complete the vocabulary pair: Right",
+  );
+  const rows = studySections
+    .find((section) => section.id === "rokyu")
+    .pages[0].blocks.find((block) => block.heading === "Vocabulary").rows;
+  expect(rows).toContainEqual(["Left", "Hidari"]);
+  expect(rows).toContainEqual(["Right", "Migi"]);
+  expect(left.answer).toBe("Hidari");
+  expect(right.answer).toBe("Migi");
+  expect(checkPracticeAnswer(left, "hidari").rating).toBe("correct");
+  expect(checkPracticeAnswer(left, "migi").rating).toBe("review");
+  expect(checkPracticeAnswer(right, "migi").rating).toBe("correct");
+  expect(checkPracticeAnswer(right, "hidari").rating).toBe("review");
+  await seedQuestions(page, [left.id, right.id]);
+  await page.getByRole("textbox", { name: "Your answer" }).fill("hidari");
+  await page
+    .getByRole("button", { name: "Next question", exact: true })
+    .click();
+  await expect(page.locator("#test-active")).toHaveAttribute(
+    "data-result",
+    "correct",
+  );
+  await expect(page.locator("#test-answer")).toHaveText("Hidari");
+  await expect(page.locator("#test-source-note")).toContainText(
+    "source reverses",
+  );
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await page.getByRole("textbox", { name: "Your answer" }).fill("migi");
+  await page.getByRole("button", { name: "Check answer", exact: true }).click();
+  await expect(page.locator("#test-active")).toHaveAttribute(
+    "data-result",
+    "correct",
+  );
+  await expect(page.locator("#test-answer")).toHaveText("Migi");
+  await page.getByRole("button", { name: "View results", exact: true }).click();
+  await expect(page.locator("#test-score")).toHaveText("100%");
+});
+
+test("restoring auto-checked direction answers regrades them without changing manual ratings", async ({
+  page,
+}) => {
+  const left = testQuestionBank.find(
+    (question) => question.prompt === "Complete the vocabulary pair: Left",
+  );
+  const right = testQuestionBank.find(
+    (question) => question.prompt === "Complete the vocabulary pair: Right",
+  );
+  await page.route("https://fonts.googleapis.com/**", (route) =>
+    route.fulfill({ contentType: "text/css", body: "" }),
+  );
+  await page.addInitScript(
+    ({ leftId, rightId }) => {
+      if (!localStorage.getItem("wj:test:session"))
+        localStorage.setItem(
+          "wj:test:session",
+          JSON.stringify({
+            config: { rank: "rokyu", categories: ["vocabulary"], count: "all" },
+            questionIds: [leftId, rightId],
+            answers: {
+              [leftId]: {
+                text: "hidari",
+                revealed: true,
+                checked: true,
+                rating: "review",
+              },
+              [rightId]: {
+                text: "hidari",
+                revealed: true,
+                checked: true,
+                rating: "correct",
+              },
+            },
+            index: 0,
+            stage: "active",
+          }),
+        );
+    },
+    { leftId: left.id, rightId: right.id },
+  );
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(page.locator("#test-active")).toHaveAttribute(
+    "data-result",
+    "correct",
+  );
+  await page.getByRole("button", { name: "Continue", exact: true }).click();
+  await expect(page.locator("#test-active")).toHaveAttribute(
+    "data-result",
+    "review",
+  );
+  await page.getByRole("button", { name: "Got it", exact: true }).click();
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await openTest(page);
+  await expect(
+    page.getByRole("button", { name: "Got it", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
 });
 
 test("answer checks tolerate formatting and explicit aliases but reject wrong and partial answers", () => {
