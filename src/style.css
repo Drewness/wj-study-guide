@@ -528,6 +528,19 @@ h1 > span {
   margin: 0 4px;
   color: #c2c8d1;
 }
+.reader-mobile-close {
+  display: none;
+  width: 44px;
+  height: 44px;
+  margin-left: 8px;
+  border: 1px solid #d6dde7;
+  border-radius: 4px;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+  background: #fff;
+  flex-shrink: 0;
+}
 .pdf-badge {
   margin-left: auto;
   border: 1px solid #e2e6ec;
@@ -911,6 +924,17 @@ select {
   }
 }
 @media (max-width: 480px) {
+  .reader-mobile-close {
+    display: flex;
+  }
+  .reader-document {
+    padding: 13px 12px;
+    gap: 10px;
+    min-height: 65px;
+  }
+  .reader-document .pdf-badge {
+    display: none;
+  }
   .sidebar {
     padding: 12px 12px 0;
   }
@@ -960,11 +984,6 @@ select {
   }
   .outline-button svg {
     width: 12px;
-  }
-  .reader-document {
-    padding: 13px 12px;
-    gap: 10px;
-    min-height: 65px;
   }
   .reader-document h2 {
     font-size: 11px;
@@ -2368,7 +2387,7 @@ select {
 .flashcards-heading { padding: 26px 0 18px; }
 .flashcards-heading .section-label { margin: 0 0 10px; }
 .flashcards-heading h2 { font: 600 30px/1.3 "Barlow Condensed", "Arial Narrow", sans-serif; color: var(--blue); margin: 0; }
-.flashcards-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; padding: 8px 0 22px; border-bottom: 1px solid var(--line); }
+.flashcards-controls { display: flex; flex-wrap: wrap; gap: 16px; align-items: end; padding: 22px 0 22px; border-bottom: 1px solid var(--line); }
 .flashcards-controls>label { display: grid; gap: 8px; color: #607087; font-size: 11px; min-width: 190px; }
 .flashcards-controls select { max-width: none; width: 100%; height: 40px; border: 1px solid #d5deea; border-radius: 4px; background: white; padding: 0 10px; font-size: 11px; color: var(--blue); }
 .flashcards-direction { display: grid; gap: 8px; font-size: 11px; color: #607087; }
@@ -2394,6 +2413,7 @@ select {
 .flashcards-navigation { display: flex; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding: 18px 0; }
 .flashcards-navigation button { min-height: 44px; font-size: 11px; }
 @media (max-width: 480px) {
+  .flashcards-controls { padding-top: 24px; }
   .task-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .flashcards-controls>label, .flashcards-direction { width: 100%; }
   .flashcards-direction>div button { flex: 1; }

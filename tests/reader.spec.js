@@ -417,6 +417,19 @@ test("the transcription covers every source page and preserves structured source
   ]);
 });
 
+test("mobile PDF close returns to the active native guide", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.route(/\.pdf(?:\?.*)?$/, (route) => route.abort());
+  await page.goto("./", { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("button", { name: "Close PDF" })).toBeHidden();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.getByRole("button", { name: /Throw Guide/ }).click();
+  await page.getByRole("button", { name: "View handbook", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Close PDF" })).toBeVisible();
+  await page.getByRole("button", { name: "Close PDF" }).click();
+  await expect(page.locator("#throw-guide")).toBeVisible();
+});
+
 test("all study content is native HTML and works without loading a PDF", async ({
   page,
 }) => {
@@ -433,7 +446,7 @@ test("all study content is native HTML and works without loading a PDF", async (
   await expect(
     page.getByRole("toolbar", { name: "PDF controls" }),
   ).toBeHidden();
-  await expect(page.locator("#open-original")).toHaveText("View reference PDF");
+  await expect(page.locator("#open-original")).toHaveText("View PDF");
   await expect(page.locator("#open-original")).toHaveAttribute(
     "href",
     /WJ-Student-Guide.*pdf/,

@@ -18,6 +18,7 @@ import {
   RotateCcw,
   Layers,
   Printer,
+  X,
 } from "lucide";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import guideUrl from "../docs/WJ-Student-Guide.pdf?url";
@@ -48,6 +49,7 @@ createIcons({
     RotateCcw,
     Layers,
     Printer,
+    X,
   },
 });
 
@@ -559,6 +561,25 @@ element("fullscreen").addEventListener("click", async () => {
 element("retry").addEventListener("click", () =>
   pdf ? renderPage() : openBook(currentBook),
 );
+
+function closeMobilePdf() {
+  if (document.fullscreenElement) {
+    void document.exitFullscreen().catch(() => {});
+  }
+  if (currentBook === "handbook") {
+    openThrows();
+    return;
+  }
+  ++loadVersion;
+  ++renderVersion;
+  renderTask?.cancel();
+  textTask?.cancel();
+  pdf = undefined;
+  updateWorkspace("study");
+  studyGuide.show();
+}
+
+element("reader-mobile-close").addEventListener("click", closeMobilePdf);
 element("paper-stage").addEventListener("keydown", (event) => {
   if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
     event.preventDefault();
